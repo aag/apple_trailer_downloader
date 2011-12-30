@@ -9,7 +9,7 @@ Universal Feed Parser (http://code.google.com/p/feedparser/)
 Using:
 
 To download trailers in 720p into the script directory, run:
-python download_trailers.py
+$ python download_trailers.py
 
 You can customize the resolution and download directory if you want.  Copy
 settings-example.cfg to settings.cfg and change the values in it.
