@@ -95,13 +95,15 @@ def getTrailerFileUrl(pageUrl):
   return ""
 
 def getDownloadedFiles():
-  f = open(dlListPath, 'r')
-
   fileList = []
-  for line in f.xreadlines():
-    fileList.append(line.strip())
 
-  f.close()
+  if (os.path.exists(dlListPath)):
+    f = open(dlListPath, 'r')
+    for line in f.xreadlines():
+      fileList.append(line.strip())
+
+    f.close()
+
   return fileList
 
 def writeDownloadedFiles(fileList):
