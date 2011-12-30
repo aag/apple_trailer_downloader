@@ -15,9 +15,9 @@ import feedparser
 from ConfigParser import SafeConfigParser
 from BeautifulSoup import BeautifulSoup
 
-###############
-# Load Config #
-###############
+#################################
+# Load Config From settings.cfg #
+#################################
 scriptDir = os.path.dirname(__file__) + '/'
 configPath = scriptDir + 'settings.cfg'
 
