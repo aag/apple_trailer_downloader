@@ -1,0 +1,8 @@
+This is a Python script to download HD trailers from the Apple Trailers website
+It uses the RSS feed to discover new trailers and keeps track of the ones
+it has already downloaded so they aren't re-downloaded.
+
+The script depends on the following imports:
+Beautiful Soup (http://www.crummy.com/software/BeautifulSoup/)
+Universal Feed Parser (http://code.google.com/p/feedparser/)
+
