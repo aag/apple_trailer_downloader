@@ -151,4 +151,4 @@ for item in feed["items"]:
       print trailerUrl
       downloadTrailerFile(trailerUrl, trailerFileName)
     else:
-      print "*** File already exists, skipping: " + trailerFileName
+      print "*** File already downloaded, skipping: " + trailerFileName

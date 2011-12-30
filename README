@@ -14,6 +14,13 @@ $ python download_trailers.py
 You can customize the resolution and download directory if you want.  Copy
 settings-example.cfg to settings.cfg and change the values in it.
 
+The script stores a list of files it has already downloaded in the download
+directory, in the file download_list.txt.  Any trailer file listed
+in the download list will not be re-downloaded, even if the trailer file
+has already been deleted.  This allows you to delete trailers after you've
+watched them, but still run the script on a regular basis and only download
+trailers you've never seen before.
+
 Note that the RSS feed on the Apple Trailers website often lags behind
 the web content, so the script may not get the newest trailers that
 are available.
