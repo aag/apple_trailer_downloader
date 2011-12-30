@@ -12,18 +12,47 @@ import urllib
 import urllib2
 import os.path
 import feedparser
+from ConfigParser import SafeConfigParser
 from BeautifulSoup import BeautifulSoup
 
-#################
-# Config values #
-#################
+###############
+# Load Config #
+###############
+scriptDir = os.path.dirname(__file__) + '/'
+configPath = scriptDir + 'settings.cfg'
 
-# The resolution of the trailer to download.  Valid values are 480, 720, and 1080.
-# Higher values are better quality, but much larger files
-res = '1080'
+res = '720'
+destdir = scriptDir
 
-# The directory that the files should be downloaded to.  Must contain a trailing slash.
-destdir = os.path.dirname(__file__) + '/'
+if (not os.path.exists(configPath)):
+  print "No config file found.  Using defaults values."
+  print "  Resolution: " + res + "p"
+  print "  Download Directory: " + destdir
+else:
+  config = SafeConfigParser(
+    defaults = {
+      'resolution': res,
+      'download_dir': destdir
+    }
+  )
+  config.read(configPath)
+
+  configValues = config.defaults()
+  res = configValues['resolution']
+  destdir = configValues['download_dir']
+
+  # Validate the config options
+  if ((res != '480') and (res != '720') and (res != '1080')):
+    print "Error: Resolution must be set to 480, 720, or 1080"
+    exit()
+
+  if ((len(destdir) < 1) or (not os.path.exists(destdir))):
+    print "Error: The download directory must be a valid path"
+    exit()
+
+  if (destdir[-1] != '/'):
+    destdir = destdir + '/'
+
 
 #############
 # Variables #
