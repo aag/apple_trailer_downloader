@@ -23,7 +23,7 @@ from BeautifulSoup import BeautifulSoup
 res = '1080'
 
 # The directory that the files should be downloaded to.  Must contain a trailing slash.
-destdir = '~/'
+destdir = os.path.dirname(__file__) + '/'
 
 #############
 # Variables #
