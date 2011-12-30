@@ -32,7 +32,10 @@ from BeautifulSoup import BeautifulSoup
 #################################
 # Load Config From settings.cfg #
 #################################
-scriptDir = os.path.dirname(__file__) + '/'
+scriptDir = os.path.dirname(__file__)
+if (scriptDir == ""):
+  scriptDir = "."
+scriptDir = scriptDir + '/'
 configPath = scriptDir + 'settings.cfg'
 
 res = '720'
