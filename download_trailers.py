@@ -21,6 +21,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import argparse
 import re
 import urllib
 import urllib2
@@ -40,6 +41,7 @@ configPath = scriptDir + 'settings.cfg'
 
 res = '720'
 destdir = scriptDir
+page = ''
 
 if (not os.path.exists(configPath)):
   print "No config file found.  Using defaults values."
@@ -70,6 +72,15 @@ else:
   if (destdir[-1] != '/'):
     destdir = destdir + '/'
 
+  parser = argparse.ArgumentParser(description=
+      'Download movie trailers from the Apple website. ' +
+      'With no arguments, will download all of the trailers in the current RSS feed. ' +
+      'When a trailer page URL is specified, will only download the single trailer at that URL. ' + 
+      '\n\nExample URL: http://trailers.apple.com/trailers/lions_gate/thehungergames/')
+  parser.add_argument('-u', action="store", dest="url", help="The URL of the Apple Trailers web page for a single trailer.")
+  results = parser.parse_args()
+  page = results.url
+
 
 #############
 # Variables #
@@ -88,11 +99,31 @@ def getTrailerFileUrl(pageUrl):
   incContents = incPage.read()
   incSoup = BeautifulSoup(incContents)
   links = incSoup.findAll('a', 'target-quicktimeplayer')
+
+  # Look for trailer 1
+  p1 = re.compile('tlr1\w?_h' + res + 'p')
   for link in links:
-    p = re.compile('tlr1_h' + res + 'p')
-    if (p.search(link['href'])):
+    if (p1.search(link['href'])):
       return link['href']
+
+  # Look for trailer 2
+  p2 = re.compile('tlr2\w?_h' + res + 'p')
+  for link in links:
+    if (p2.search(link['href'])):
+      return link['href']
+
+  print "No trailer URL found, this film might not have a trailer available (only teasers or clips)."
   return ""
+
+def getTrailerTitle(pageUrl):
+  """Take a trailer page URL and return the title of the film, taken from the title tag on the page"""
+  trPage = urllib.urlopen(pageUrl)
+  trContents = trPage.read()
+  trSoup = BeautifulSoup(trContents)
+  titleTag = trSoup.html.head.title.string
+
+  titleParts = titleTag.split(' - ')
+  return titleParts[0]
 
 def getDownloadedFiles():
   fileList = []
@@ -137,18 +168,32 @@ def downloadTrailerFile(url, filename):
 
   recordDownloadedFile(filename)
 
-feed = feedparser.parse('http://trailers.apple.com/trailers/home/rss/newtrailers.rss')
-
-for item in feed["items"]:
-  print item["title"]
-  trailerUrl = getTrailerFileUrl(item["link"])
-  p = re.compile("(.*) - ")
-  pmatch = p.search(item["title"])
-  trailerFileName = pmatch.groups()[0] + ".Trailer." + res + "p.mov"
+def downloadTrailerFromPage(pageUrl, title):
+  print "Checking for " + title
+  trailerUrl = getTrailerFileUrl(pageUrl)
+  trailerFileName = title + ".Trailer." + res + "p.mov"
   downloadedFiles = getDownloadedFiles()
   if trailerUrl != "":
     if not trailerFileName in downloadedFiles:
-      print trailerUrl
+      print "downloading " + trailerUrl
       downloadTrailerFile(trailerUrl, trailerFileName)
     else:
       print "*** File already downloaded, skipping: " + trailerFileName
+
+
+if page != None:
+  # The trailer page URL was passed in on the command line
+  trailerTitle = getTrailerTitle(page)
+  downloadTrailerFromPage(page, trailerTitle)
+
+else:
+  # Use the rss feed
+  feed = feedparser.parse('http://trailers.apple.com/trailers/home/rss/newtrailers.rss')
+
+  for item in feed["items"]:
+    p = re.compile("(.*) - ")
+    pmatch = p.search(item["title"])
+    trailerTitle = pmatch.groups()[0]
+
+    downloadTrailerFromPage(item["link"], trailerTitle)
+
