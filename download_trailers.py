@@ -101,7 +101,7 @@ def getTrailerFileUrl(pageUrl):
   links = incSoup.findAll('a', 'target-quicktimeplayer')
 
   # Look for trailer 1
-  p1 = re.compile('tlr1\w?_h' + res + 'p')
+  p1 = re.compile('tlr1.*_h' + res + 'p')
   for link in links:
     if (p1.search(link['href'])):
       return link['href']
