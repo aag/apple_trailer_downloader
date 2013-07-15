@@ -1,12 +1,13 @@
 #!/usr/bin/python
 
-# This is a Python script to download HD trailers from the Apple Trailers website
-# It uses the RSS feed to discover new trailers and keeps track of the ones
-# it has already downloaded so they aren't re-downloaded.
+# This is a Python script to download HD trailers from the Apple Trailers
+# website. It uses the "Just Added" JSON endpoint to discover new trailers and
+# keeps track of the ones it has already downloaded so they aren't
+# re-downloaded.
 #
 # Started on: 10.14.2011
 #
-# Copyright 2011 Adam Goforth
+# Copyright 2011-2013 Adam Goforth
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -26,7 +27,8 @@ import re
 import urllib
 import urllib2
 import os.path
-import feedparser
+import json
+import shutil
 from ConfigParser import SafeConfigParser
 from BeautifulSoup import BeautifulSoup
 
@@ -61,8 +63,8 @@ else:
   destdir = configValues['download_dir']
 
   # Validate the config options
-  if ((res != '480') and (res != '720') and (res != '1080')):
-    print "Error: Resolution must be set to 480, 720, or 1080"
+  if ((res != '480') and (res != '720')):
+    print "Error: Resolution must be set to 480 or 720"
     exit()
 
   if ((len(destdir) < 1) or (not os.path.exists(destdir))):
@@ -93,27 +95,27 @@ dlListPath = destdir + "download_list.txt"
 
 def getTrailerFileUrl(pageUrl):
   """Take a trailer page URL and convert it to the URL of the trailer .mov file in the desired resolution"""
-  """The trailer file URL is pulled out of a web.inc file on the server."""
-  incUrl = pageUrl + 'includes/playlists/web.inc'
+  """The trailer file URL is pulled out of a JSON file on the server."""
+  resSegment = "extralarge"
+  if (res == '480'):
+    resSegment = "large"
+
+  incUrl = pageUrl + 'includes/trailer/' + resSegment + '.html'
   incPage = urllib.urlopen(incUrl)
   incContents = incPage.read()
   incSoup = BeautifulSoup(incContents)
-  links = incSoup.findAll('a', 'target-quicktimeplayer')
+  links = incSoup.findAll('a', 'movieLink')
 
-  # Look for trailer 1
-  p1 = re.compile('tlr1.*_h' + res + 'p')
-  for link in links:
-    if (p1.search(link['href'])):
-      return link['href']
+  if (len(links) != 1):
+    print "Error finding the trailer file URL"
+    return ""
 
-  # Look for trailer 2
-  p2 = re.compile('tlr2\w?_h' + res + 'p')
-  for link in links:
-    if (p2.search(link['href'])):
-      return link['href']
+  url = links[0]['href']
 
-  print "No trailer URL found, this film might not have a trailer available (only teasers or clips)."
-  return ""
+  # Change link URL to the download URL by changing e.g. _720p to _h720p
+  url = re.sub('_(\d+)p', '_h\\1p', url)
+
+  return url
 
 def getTrailerTitle(pageUrl):
   """Take a trailer page URL and return the title of the film, taken from the title tag on the page"""
@@ -159,12 +161,10 @@ def downloadTrailerFile(url, filename):
   f = urllib2.urlopen(req)
 
   filePath = destdir + filename
-  CHUNK = 16 * 1024
+  # Buffer 1MB at a time
+  chunkSize = 1024 * 1024
   with open(filePath, 'wb') as fp:
-    while True:
-      chunk = f.read(CHUNK)
-      if not chunk: break
-      fp.write(chunk)
+    shutil.copyfileobj(f, fp, chunkSize)
 
   recordDownloadedFile(filename)
 
@@ -187,13 +187,10 @@ if page != None:
   downloadTrailerFromPage(page, trailerTitle)
 
 else:
-  # Use the rss feed
-  feed = feedparser.parse('http://trailers.apple.com/trailers/home/rss/newtrailers.rss')
+  # Use the "Just Added" JSON file
+  newestTrailers = json.load(urllib.urlopen('http://trailers.apple.com/trailers/home/feeds/just_added.json'))
 
-  for item in feed["items"]:
-    p = re.compile("(.*) - ")
-    pmatch = p.search(item["title"])
-    trailerTitle = pmatch.groups()[0]
-
-    downloadTrailerFromPage(item["link"], trailerTitle)
+  for trailer in newestTrailers:
+    url = "http://trailers.apple.com" + trailer["location"]
+    downloadTrailerFromPage(url, trailer["title"])
 
