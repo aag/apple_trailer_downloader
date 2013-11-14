@@ -30,7 +30,7 @@ import os.path
 import json
 import shutil
 from ConfigParser import SafeConfigParser
-from BeautifulSoup import BeautifulSoup
+from bs4 import BeautifulSoup
 
 #################################
 # Load Config From settings.cfg #

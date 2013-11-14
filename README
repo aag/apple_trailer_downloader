@@ -3,7 +3,7 @@ It uses the RSS feed to discover new trailers and keeps track of the ones
 it has already downloaded so they aren't re-downloaded.
 
 The script depends on the following imports:
-Beautiful Soup (http://www.crummy.com/software/BeautifulSoup/)
+Beautiful Soup 4 (http://www.crummy.com/software/BeautifulSoup/)
 Universal Feed Parser (http://code.google.com/p/feedparser/)
 
 Using:
@@ -20,10 +20,5 @@ in the download list will not be re-downloaded, even if the trailer file
 has already been deleted.  This allows you to delete trailers after you've
 watched them, but still run the script on a regular basis and only download
 trailers you've never seen before.
-
-Note that the RSS feed on the Apple Trailers website often lags behind
-the web content, so the script may not get the newest trailers that
-are available.
-
 
 This code is free software licensed under the GPL 3.
