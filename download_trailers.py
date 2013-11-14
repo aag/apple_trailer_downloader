@@ -45,6 +45,15 @@ res = '720'
 destdir = scriptDir
 page = ''
 
+parser = argparse.ArgumentParser(description=
+        'Download movie trailers from the Apple website. ' +
+        'With no arguments, will download all of the trailers in the current RSS feed. ' +
+        'When a trailer page URL is specified, will only download the single trailer at that URL. ' + 
+        '\n\nExample URL: http://trailers.apple.com/trailers/lions_gate/thehungergames/')
+parser.add_argument('-u', action="store", dest="url", help="The URL of the Apple Trailers web page for a single trailer.")
+results = parser.parse_args()
+page = results.url
+
 if (not os.path.exists(configPath)):
     print "No config file found.  Using defaults values."
     print "    Resolution: " + res + "p"
@@ -73,15 +82,6 @@ else:
 
     if (destdir[-1] != '/'):
         destdir = destdir + '/'
-
-parser = argparse.ArgumentParser(description=
-        'Download movie trailers from the Apple website. ' +
-        'With no arguments, will download all of the trailers in the current RSS feed. ' +
-        'When a trailer page URL is specified, will only download the single trailer at that URL. ' + 
-        '\n\nExample URL: http://trailers.apple.com/trailers/lions_gate/thehungergames/')
-parser.add_argument('-u', action="store", dest="url", help="The URL of the Apple Trailers web page for a single trailer.")
-results = parser.parse_args()
-page = results.url
 
 
 #############
