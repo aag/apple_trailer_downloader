@@ -71,6 +71,7 @@ def getTrailerTitle(pageUrl):
     return titleParts[0]
 
 def getDownloadedFiles(dlListPath):
+    """Get the list of downloaded files from the text file"""
     fileList = []
     if (os.path.exists(dlListPath)):
         f = open(dlListPath, 'r')
@@ -80,18 +81,21 @@ def getDownloadedFiles(dlListPath):
     return fileList
 
 def writeDownloadedFiles(fileList, dlListPath):
+    """Write the list of downloaded files to the text file"""
     f = open(dlListPath, 'w')
     newList = [filename + "\n" for filename in fileList]
     f.writelines(newList)
     f.close()
 
 def recordDownloadedFile(filename, dlListPath):
+    """Appends the given filename to the text file of already downloaded files"""
     fileList = getDownloadedFiles(dlListPath)
     fileList.append(filename)
     writeDownloadedFiles(fileList, dlListPath)
 
 def downloadTrailerFile(url, destdir, filename):
-    """Accepts a URL to a trailers file and downloads it"""
+    """Accepts a URL to a trailer video file and downloads it"""
+    """You have to spoof the user agent or the site will deny the request"""
     user_agent = 'QuickTime/7.6.2'
     data = None
     headers = { 'User-Agent' : user_agent }
@@ -105,6 +109,8 @@ def downloadTrailerFile(url, destdir, filename):
         shutil.copyfileobj(f, fp, chunkSize)
 
 def downloadTrailerFromPage(pageUrl, title, dlListPath, res, destdir):
+    """Takes a page on the Apple Trailers website and downloads the trailer for the movie on the page"""
+    """Example URL: http://trailers.apple.com/trailers/lions_gate/thehungergames/"""
     print "Checking for " + title
     trailerUrl = getTrailerFileUrl(pageUrl, res)
     trailerFileName = title + ".Trailer." + res + "p.mov"
