@@ -46,9 +46,9 @@ def getTrailerFileUrl(pageUrl, res):
     links = incSoup.findAll('a', 'movieLink')
 
     if (len(links) != 1):
-        # Maybe there is only a 480 trailer
+        # Some trailers might only have a 480p file
         if res != '480':
-            print "Error finding the trailer file URL with resolution '%s'. Retry with '480'" % res
+            print "Could not find a trailer file URL with resolution '%s'. Retrying with '480'" % res
             return getTrailerFileUrl(pageUrl, '480')
         print "Error finding the trailer file URL"
         return ""
