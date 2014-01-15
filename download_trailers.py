@@ -125,9 +125,7 @@ if __name__ == '__main__':
     import json
     from ConfigParser import SafeConfigParser
     
-    #################################
-    # Load Config From settings.cfg #
-    #################################
+    # Load Config From settings.cfg
     scriptDir = os.path.abspath(os.path.dirname(__file__))
     configPath = "%s/settings.cfg" % scriptDir
     
@@ -173,14 +171,9 @@ if __name__ == '__main__':
         if (destdir[-1] != '/'):
             destdir = destdir + '/'
 
-    #############
-    # Variables #
-    #############
     dlListPath = destdir + "download_list.txt"
 
-    ############
-    # Download #
-    ############
+    # Do the download
     if page != None:
         # The trailer page URL was passed in on the command line
         trailerTitle = getTrailerTitle(page)
