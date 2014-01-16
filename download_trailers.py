@@ -22,6 +22,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+# Some imports are declared inside of functions, so other functions in this
+# script can be used in other scripts, without requiring all of
+# the dependencies.
 import re
 import urllib
 import urllib2
