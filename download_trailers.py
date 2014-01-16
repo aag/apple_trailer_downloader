@@ -123,21 +123,57 @@ def downloadTrailerFromPage(pageUrl, title, dlListPath, res, destdir):
         else:
             print "*** File already downloaded, skipping: " + trailerFileName
 
+def getConfigValues():
+    """Get the script's configuration values and return them in a dict
+    
+    If a config file exists, merge its values with the defaults. If no config
+    file exists, just return the defaults. Validates the settings in the
+    config file and raises a ValueError exception if any of the given settings
+    are invalid.
+    
+    """
+    from ConfigParser import SafeConfigParser
+
+    scriptDir = os.path.abspath(os.path.dirname(__file__))
+    configPath = "%s/settings.cfg" % scriptDir
+ 
+    config = SafeConfigParser(
+        defaults = {
+            'resolution': '720',
+            'download_dir': scriptDir
+        }
+    )
+    configValues = config.defaults()
+
+    if (configValues['download_dir'][-1] != '/'):
+        configValues['download_dir'] = configValues['download_dir'] + '/'
+
+    if (not os.path.exists(configPath)):
+        print "No config file found.  Using default values."
+        print "    Resolution: " + configValues['resolution'] + "p"
+        print "    Download Directory: " + configValues['download_dir']
+    else:
+        config.read(configPath)
+
+        configValues = config.defaults()
+        validResolutions = ['480', '720']
+
+        # Validate the config options
+        if configValues['resolution'] not in validResolutions:
+            raise ValueError('Invalid resolution. Valid values: ' + str(validResolutions))
+
+        if (len(configValues['download_dir']) < 1) or (not os.path.exists(configValues['download_dir'])):
+            raise ValueError('The download directory must be a valid path')
+
+    return configValues
+
+
 #############
 # Main Prog #
 #############
 if __name__ == '__main__':
     import argparse
     import json
-    from ConfigParser import SafeConfigParser
-    
-    # Load Config From settings.cfg
-    scriptDir = os.path.abspath(os.path.dirname(__file__))
-    configPath = "%s/settings.cfg" % scriptDir
-    
-    res = '720'
-    destdir = scriptDir
-    page = ''
     
     parser = argparse.ArgumentParser(description=
             'Download movie trailers from the Apple website. ' +
@@ -148,42 +184,20 @@ if __name__ == '__main__':
     results = parser.parse_args()
     page = results.url
 
-    if (not os.path.exists(configPath)):
-        print "No config file found.  Using defaults values."
-        print "    Resolution: " + res + "p"
-        print "    Download Directory: " + destdir
-    else:
-        config = SafeConfigParser(
-            defaults = {
-                'resolution': res,
-                'download_dir': destdir
-            }
-        )
-        config.read(configPath)
+    try:
+        config = getConfigValues()
+    except ValueError as e:
+        print "Configuration error: " + str(e)
+        print "Exiting..."
+        exit()
 
-        configValues = config.defaults()
-        res = configValues['resolution']
-        destdir = configValues['download_dir']
-
-        # Validate the config options
-        if ((res != '480') and (res != '720')):
-            print "Error: Resolution must be set to 480 or 720"
-            exit()
-
-        if ((len(destdir) < 1) or (not os.path.exists(destdir))):
-            print "Error: The download directory must be a valid path"
-            exit()
-
-        if (destdir[-1] != '/'):
-            destdir = destdir + '/'
-
-    dlListPath = destdir + "download_list.txt"
+    dlListPath = config['download_dir'] + "download_list.txt"
 
     # Do the download
     if page != None:
         # The trailer page URL was passed in on the command line
         trailerTitle = getTrailerTitle(page)
-        downloadTrailerFromPage(page, trailerTitle, dlListPath, res, destdir)
+        downloadTrailerFromPage(page, trailerTitle, dlListPath, config['resolution'], config['download_dir'])
 
     else:
         # Use the "Just Added" JSON file
@@ -191,4 +205,4 @@ if __name__ == '__main__':
     
         for trailer in newestTrailers:
             url = "http://trailers.apple.com" + trailer["location"]
-            downloadTrailerFromPage(url, trailer["title"], dlListPath, res, destdir)
+            downloadTrailerFromPage(url, trailer["title"], dlListPath, config['resolution'], config['download_dir'])
