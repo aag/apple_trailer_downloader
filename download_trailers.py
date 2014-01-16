@@ -149,12 +149,12 @@ def getConfigValues():
     configValues = config.defaults()
 
     if (configValues['download_dir'][-1] != '/'):
-        configValues['download_dir'] = configValues['download_dir'] + '/'
+        configValues['download_dir'] = '%s/' % configValues['download_dir']
 
     if (not os.path.exists(configPath)):
         print "No config file found.  Using default values."
-        print "    Resolution: " + configValues['resolution'] + "p"
-        print "    Download Directory: " + configValues['download_dir']
+        print "    Resolution: %sp" % configValues['resolution']
+        print "    Download Directory: %s" % configValues['download_dir']
     else:
         config.read(configPath)
 
@@ -163,7 +163,7 @@ def getConfigValues():
 
         # Validate the config options
         if configValues['resolution'] not in validResolutions:
-            raise ValueError('Invalid resolution. Valid values: ' + str(validResolutions))
+            raise ValueError('Invalid resolution. Valid values: %s' % validResolutions)
 
         if (len(configValues['download_dir']) < 1) or (not os.path.exists(configValues['download_dir'])):
             raise ValueError('The download directory must be a valid path')
