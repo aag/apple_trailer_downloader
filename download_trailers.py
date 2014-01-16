@@ -163,7 +163,8 @@ def getConfigValues():
 
         # Validate the config options
         if configValues['resolution'] not in validResolutions:
-            raise ValueError('Invalid resolution. Valid values: %s' % validResolutions)
+            resString = ", ".join(validResolutions)
+            raise ValueError('Invalid resolution. Valid values: %s' % resString)
 
         if (len(configValues['download_dir']) < 1) or (not os.path.exists(configValues['download_dir'])):
             raise ValueError('The download directory must be a valid path')
