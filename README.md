@@ -1,9 +1,9 @@
 Apple Trailers Downloader
 =========================
 This is a Python script to download HD trailers from the Apple Trailers website.
-It uses the "Just Added" JSON file that the website uses to find new trailers
-and keeps track of the ones it has already downloaded so they aren't
-re-downloaded.
+It uses the "Just Added" JSON file that is also used by the web interface to
+find new trailers and keeps track of the ones it has already downloaded so
+they aren't re-downloaded.
 
 Dependencies
 ------------

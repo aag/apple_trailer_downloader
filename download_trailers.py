@@ -7,7 +7,7 @@
 #
 # Started on: 10.14.2011
 #
-# Copyright 2011-2013 Adam Goforth
+# Copyright 2011-2014 Adam Goforth
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -36,8 +36,53 @@ from bs4 import BeautifulSoup
 # Functions #
 #############
 def getTrailerFileUrl(pageUrl, res):
+    iTunesResolutions = ['720', '1080']
+    webResolutions = ['480', '720']
+
+    url = ''
+
+    # Order matters here. Prefer the iTunes files over the web files.
+    if res in iTunesResolutions:
+        url = getITunesTrailerFileUrl(pageUrl, res)
+    elif res in webResolutions:
+        url = getWebTrailerFileUrl(pageUrl, res)
+    else:
+        uniqueResolutions = list(set(iTunesResolutions + webResolutions))
+        resString = ', '.join(uniqueResolutions)
+        raise ValueError("Invalid resolution. Valid values: %s" % resString)
+
+    return url
+
+def getITunesTrailerFileUrl(pageUrl, res):
     """Take a trailer page URL and convert it to the URL of the trailer .mov file in the desired resolution"""
-    """The trailer file URL is pulled out of a JSON file on the server."""
+    """The trailer file URL is pulled out of the 'iTunes' .inc file on the server."""
+
+    incUrl = pageUrl + '/includes/playlists/itunes.inc'
+    incPage = urllib.urlopen(incUrl)
+    incContents = incPage.read()
+    incSoup = BeautifulSoup(incContents)
+
+    linkMatcher = "tlr1.*%sp" % res
+    links = incSoup.findAll(href=re.compile(linkMatcher))
+    
+    if (len(links) != 1):
+        # Go down in resolution if file not found
+        if res == '1080':
+            print "Could not find a trailer file URL with resolution '%s'. Retrying with '720'" % res
+            return getITunesTrailerFileUrl(pageUrl, '720')
+        if res == '720':
+            print "Could not find a trailer file URL with resolution '%s'. Retrying with the 'web' source" % res
+            return getTrailerWebFileUrl(pageUrl, '720')
+        print "Error finding the trailer file URL"
+        return ""
+
+    url = links[0]['href']
+
+    return url
+
+def getWebTrailerFileUrl(pageUrl, res):
+    """Take a trailer page URL and convert it to the URL of the trailer .mov file in the desired resolution"""
+    """The trailer file URL is pulled out of the 'web' HTML file on the server."""
     resSegment = "extralarge"
     if (res == '480'):
         resSegment = "large"
@@ -50,9 +95,9 @@ def getTrailerFileUrl(pageUrl, res):
 
     if (len(links) != 1):
         # Some trailers might only have a 480p file
-        if res != '480':
+        if res == '720':
             print "Could not find a trailer file URL with resolution '%s'. Retrying with '480'" % res
-            return getTrailerFileUrl(pageUrl, '480')
+            return getWebTrailerFileUrl(pageUrl, '480')
         print "Error finding the trailer file URL"
         return ""
 
@@ -106,6 +151,7 @@ def downloadTrailerFile(url, destdir, filename):
     f = urllib2.urlopen(req)
 
     filePath = destdir + filename
+    print "Saving file to %s" % filePath
     # Buffer 1MB at a time
     chunkSize = 1024 * 1024
     with open(filePath, 'wb') as fp:
@@ -148,9 +194,6 @@ def getConfigValues():
     )
     configValues = config.defaults()
 
-    if (configValues['download_dir'][-1] != '/'):
-        configValues['download_dir'] = '%s/' % configValues['download_dir']
-
     if (not os.path.exists(configPath)):
         print "No config file found.  Using default values."
         print "    Resolution: %sp" % configValues['resolution']
@@ -159,7 +202,7 @@ def getConfigValues():
         config.read(configPath)
 
         configValues = config.defaults()
-        validResolutions = ['480', '720']
+        validResolutions = ['480', '720', '1080']
 
         # Validate the config options
         if configValues['resolution'] not in validResolutions:
@@ -168,6 +211,10 @@ def getConfigValues():
 
         if (len(configValues['download_dir']) < 1) or (not os.path.exists(configValues['download_dir'])):
             raise ValueError('The download directory must be a valid path')
+
+
+    if (configValues['download_dir'][-1] != '/'):
+        configValues['download_dir'] = '%s/' % configValues['download_dir']
 
     return configValues
 
