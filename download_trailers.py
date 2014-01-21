@@ -73,8 +73,8 @@ def getITunesTrailerFileUrl(pageUrl, res):
         if res == '720':
             print "Could not find a trailer file URL with resolution '%s'. Retrying with the 'web' source" % res
             return getTrailerWebFileUrl(pageUrl, '720')
-        print "Error finding the trailer file URL"
-        return ""
+        print 'Error finding the trailer file URL'
+        return ''
 
     url = links[0]['href']
 
@@ -83,9 +83,9 @@ def getITunesTrailerFileUrl(pageUrl, res):
 def getWebTrailerFileUrl(pageUrl, res):
     """Take a trailer page URL and convert it to the URL of the trailer .mov file in the desired resolution"""
     """The trailer file URL is pulled out of the 'web' HTML file on the server."""
-    resSegment = "extralarge"
+    resSegment = 'extralarge'
     if (res == '480'):
-        resSegment = "large"
+        resSegment = 'large'
 
     incUrl = pageUrl + 'includes/trailer/' + resSegment + '.html'
     incPage = urllib.urlopen(incUrl)
@@ -98,8 +98,8 @@ def getWebTrailerFileUrl(pageUrl, res):
         if res == '720':
             print "Could not find a trailer file URL with resolution '%s'. Retrying with '480'" % res
             return getWebTrailerFileUrl(pageUrl, '480')
-        print "Error finding the trailer file URL"
-        return ""
+        print 'Error finding the trailer file URL'
+        return ''
 
     url = links[0]['href']
 
@@ -131,7 +131,7 @@ def getDownloadedFiles(dlListPath):
 def writeDownloadedFiles(fileList, dlListPath):
     """Write the list of downloaded files to the text file"""
     f = open(dlListPath, 'w')
-    newList = [filename + "\n" for filename in fileList]
+    newList = [filename + '\n' for filename in fileList]
     f.writelines(newList)
     f.close()
 
@@ -160,17 +160,17 @@ def downloadTrailerFile(url, destdir, filename):
 def downloadTrailerFromPage(pageUrl, title, dlListPath, res, destdir):
     """Takes a page on the Apple Trailers website and downloads the trailer for the movie on the page"""
     """Example URL: http://trailers.apple.com/trailers/lions_gate/thehungergames/"""
-    print "Checking for " + title
+    print 'Checking for ' + title
     trailerUrl = getTrailerFileUrl(pageUrl, res)
-    trailerFileName = title + ".Trailer." + res + "p.mov"
+    trailerFileName = title + '.Trailer.' + res + 'p.mov'
     downloadedFiles = getDownloadedFiles(dlListPath)
-    if trailerUrl != "":
+    if trailerUrl != '':
         if not trailerFileName in downloadedFiles:
-            print "downloading " + trailerUrl
+            print 'downloading ' + trailerUrl
             downloadTrailerFile(trailerUrl, destdir, trailerFileName)
             recordDownloadedFile(trailerFileName, dlListPath)
         else:
-            print "*** File already downloaded, skipping: " + trailerFileName
+            print '*** File already downloaded, skipping: ' + trailerFileName
 
 def getConfigValues():
     """Get the script's configuration values and return them in a dict
@@ -195,7 +195,7 @@ def getConfigValues():
     configValues = config.defaults()
 
     if (not os.path.exists(configPath)):
-        print "No config file found.  Using default values."
+        print 'No config file found.  Using default values.'
         print "    Resolution: %sp" % configValues['resolution']
         print "    Download Directory: %s" % configValues['download_dir']
     else:
@@ -206,15 +206,15 @@ def getConfigValues():
 
         # Validate the config options
         if configValues['resolution'] not in validResolutions:
-            resString = ", ".join(validResolutions)
-            raise ValueError('Invalid resolution. Valid values: %s' % resString)
+            resString = ', '.join(validResolutions)
+            raise ValueError("Invalid resolution. Valid values: %s" % resString)
 
         if (len(configValues['download_dir']) < 1) or (not os.path.exists(configValues['download_dir'])):
             raise ValueError('The download directory must be a valid path')
 
 
     if (configValues['download_dir'][-1] != '/'):
-        configValues['download_dir'] = '%s/' % configValues['download_dir']
+        configValues['download_dir'] = "%s/" % configValues['download_dir']
 
     return configValues
 
@@ -231,18 +231,18 @@ if __name__ == '__main__':
             'With no arguments, will download all of the trailers in the current RSS feed. ' +
             'When a trailer page URL is specified, will only download the single trailer at that URL. ' + 
             '\n\nExample URL: http://trailers.apple.com/trailers/lions_gate/thehungergames/')
-    parser.add_argument('-u', action="store", dest="url", help="The URL of the Apple Trailers web page for a single trailer.")
+    parser.add_argument('-u', action='store', dest='url', help='The URL of the Apple Trailers web page for a single trailer.')
     results = parser.parse_args()
     page = results.url
 
     try:
         config = getConfigValues()
     except ValueError as e:
-        print "Configuration error: " + str(e)
-        print "Exiting..."
+        print "Configuration error: %s" % e
+        print 'Exiting...'
         exit()
 
-    dlListPath = config['download_dir'] + "download_list.txt"
+    dlListPath = config['download_dir'] + 'download_list.txt'
 
     # Do the download
     if page != None:
@@ -255,5 +255,5 @@ if __name__ == '__main__':
         newestTrailers = json.load(urllib.urlopen('http://trailers.apple.com/trailers/home/feeds/just_added.json'))
     
         for trailer in newestTrailers:
-            url = "http://trailers.apple.com" + trailer["location"]
-            downloadTrailerFromPage(url, trailer["title"], dlListPath, config['resolution'], config['download_dir'])
+            url = 'http://trailers.apple.com' + trailer['location']
+            downloadTrailerFromPage(url, trailer['title'], dlListPath, config['resolution'], config['download_dir'])
