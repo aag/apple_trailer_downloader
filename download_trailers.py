@@ -72,7 +72,7 @@ def getITunesTrailerFileUrl(pageUrl, res):
             return getITunesTrailerFileUrl(pageUrl, '720')
         if res == '720':
             print "Could not find a trailer file URL with resolution '%s'. Retrying with the 'web' source" % res
-            return getTrailerWebFileUrl(pageUrl, '720')
+            return getWebTrailerFileUrl(pageUrl, '720')
         print 'Error finding the trailer file URL'
         return ''
 
