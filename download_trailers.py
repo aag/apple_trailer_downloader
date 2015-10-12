@@ -162,7 +162,7 @@ def downloadTrailerFromPage(pageUrl, title, dlListPath, res, destdir):
     """Example URL: http://trailers.apple.com/trailers/lions_gate/thehungergames/"""
     print 'Checking for ' + title
     trailerUrl = getTrailerFileUrl(pageUrl, res)
-    trailerFileName = title + '.Trailer.' + res + 'p.mov'
+    trailerFileName = getValidFilename(title) + '.Trailer.' + res + 'p.mov'
     downloadedFiles = getDownloadedFiles(dlListPath)
     if trailerUrl != '':
         if not trailerFileName in downloadedFiles:
@@ -171,6 +171,13 @@ def downloadTrailerFromPage(pageUrl, title, dlListPath, res, destdir):
             recordDownloadedFile(trailerFileName, dlListPath)
         else:
             print '*** File already downloaded, skipping: ' + trailerFileName
+
+def getValidFilename(name):
+    """Remove characters from the given string which appear in a blacklist.
+
+    The blacklist contains characters that should not be used in filenames on
+    various operating systems."""
+    return "".join(s for s in name if s not in "\/:*?<>|#%&{}$!'\"@+`=");
 
 def getConfigValues():
     """Get the script's configuration values and return them in a dict
