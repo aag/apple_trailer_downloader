@@ -78,7 +78,7 @@ def getITunesTrailersFileUrls(pageUrl, res):
 
     url = links[0]['href']
 
-    return [{'url': url, 'type': 'Trailer 1'}]
+    return [{'url': url, 'type': 'Trailer 1', 'res': res}]
 
 def getWebTrailersFileUrls(pageUrl, res):
     """Take a trailer page URL and convert it to the URL of the trailer .mov file in the desired resolution"""
@@ -97,7 +97,7 @@ def getWebTrailersFileUrls(pageUrl, res):
         # Some trailers might only have a 480p file
         if res == '720':
             print "Could not find a trailer file URL with resolution '%s'. Retrying with '480'" % res
-            return getWebTrailerFileUrls(pageUrl, '480')
+            return getWebTrailersFileUrls(pageUrl, '480')
         print 'Error finding the trailer file URL'
         return ''
 
@@ -106,7 +106,7 @@ def getWebTrailersFileUrls(pageUrl, res):
     # Change link URL to the download URL by changing e.g. _720p to _h720p
     url = re.sub('_(\d+)p', '_h\\1p', url)
 
-    return [{'url': url, 'type': 'Trailer 1'}]
+    return [{'url': url, 'type': 'Trailer 1', 'res': res}]
 
 def getTrailerTitle(pageUrl):
     """Take a trailer page URL and return the title of the film, taken from the title tag on the page"""
@@ -163,7 +163,7 @@ def downloadTrailersFromPage(pageUrl, title, dlListPath, res, destdir):
     print 'Checking for ' + title
     trailerUrls = getTrailerFileUrls(pageUrl, res)
     for trailerUrl in trailerUrls:
-        trailerFileName = title + '.' + trailerUrl['type'] + '.' + res + 'p.mov'
+        trailerFileName = title + '.' + trailerUrl['type'] + '.' + trailerUrl['res'] + 'p.mov'
         trailerFileName = getValidFilename(trailerFileName)
         downloadedFiles = getDownloadedFiles(dlListPath)
         if not trailerFileName in downloadedFiles:
