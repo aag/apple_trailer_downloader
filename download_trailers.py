@@ -60,7 +60,7 @@ def getITunesTrailersFileUrls(pageUrl, res):
     incUrl = pageUrl + '/includes/playlists/itunes.inc'
     incPage = urllib.urlopen(incUrl)
     incContents = incPage.read()
-    incSoup = BeautifulSoup(incContents)
+    incSoup = BeautifulSoup(incContents, "html.parser")
 
     linkMatcher = "tlr1.*%sp" % res
     links = incSoup.findAll(href=re.compile(linkMatcher))
@@ -90,7 +90,7 @@ def getWebTrailersFileUrls(pageUrl, res):
     incUrl = pageUrl + 'includes/trailer/' + resSegment + '.html'
     incPage = urllib.urlopen(incUrl)
     incContents = incPage.read()
-    incSoup = BeautifulSoup(incContents)
+    incSoup = BeautifulSoup(incContents, "html.parser")
     links = incSoup.findAll('a', 'movieLink')
 
     if (len(links) != 1):
@@ -112,7 +112,7 @@ def getTrailerTitle(pageUrl):
     """Take a trailer page URL and return the title of the film, taken from the title tag on the page"""
     trPage = urllib.urlopen(pageUrl)
     trContents = trPage.read()
-    trSoup = BeautifulSoup(trContents)
+    trSoup = BeautifulSoup(trContents, "html.parser")
     titleTag = trSoup.html.head.title.string
 
     titleParts = titleTag.split(' - ')
