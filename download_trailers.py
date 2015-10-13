@@ -78,7 +78,7 @@ def getITunesTrailersFileUrls(pageUrl, res):
 
     url = links[0]['href']
 
-    return [{'url': url, 'type': 'Trailer 1', 'res': res}]
+    return [{'url': url, 'type': 'Trailer', 'res': res}]
 
 def getWebTrailersFileUrls(pageUrl, res):
     """Take a trailer page URL and convert it to the URL of the trailer .mov file in the desired resolution"""
@@ -106,7 +106,7 @@ def getWebTrailersFileUrls(pageUrl, res):
     # Change link URL to the download URL by changing e.g. _720p to _h720p
     url = re.sub('_(\d+)p', '_h\\1p', url)
 
-    return [{'url': url, 'type': 'Trailer 1', 'res': res}]
+    return [{'url': url, 'type': 'Trailer', 'res': res}]
 
 def getTrailerTitle(pageUrl):
     """Take a trailer page URL and return the title of the film, taken from the title tag on the page"""
