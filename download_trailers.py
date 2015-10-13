@@ -35,25 +35,25 @@ from bs4 import BeautifulSoup
 #############
 # Functions #
 #############
-def getTrailerFileUrl(pageUrl, res):
+def getTrailerFileUrls(pageUrl, res):
     iTunesResolutions = ['720', '1080']
     webResolutions = ['480', '720']
 
-    url = ''
+    urls = []
 
     # Order matters here. Prefer the iTunes files over the web files.
     if res in iTunesResolutions:
-        url = getITunesTrailerFileUrl(pageUrl, res)
+        urls = getITunesTrailersFileUrls(pageUrl, res)
     elif res in webResolutions:
-        url = getWebTrailerFileUrl(pageUrl, res)
+        urls = getWebTrailersFileUrls(pageUrl, res)
     else:
         uniqueResolutions = list(set(iTunesResolutions + webResolutions))
         resString = ', '.join(uniqueResolutions)
         raise ValueError("Invalid resolution. Valid values: %s" % resString)
 
-    return url
+    return urls
 
-def getITunesTrailerFileUrl(pageUrl, res):
+def getITunesTrailersFileUrls(pageUrl, res):
     """Take a trailer page URL and convert it to the URL of the trailer .mov file in the desired resolution"""
     """The trailer file URL is pulled out of the 'iTunes' .inc file on the server."""
 
@@ -69,18 +69,18 @@ def getITunesTrailerFileUrl(pageUrl, res):
         # Go down in resolution if file not found
         if res == '1080':
             print "Could not find a trailer file URL with resolution '%s'. Retrying with '720'" % res
-            return getITunesTrailerFileUrl(pageUrl, '720')
+            return getITunesTrailersFileUrls(pageUrl, '720')
         if res == '720':
             print "Could not find a trailer file URL with resolution '%s'. Retrying with the 'web' source" % res
-            return getWebTrailerFileUrl(pageUrl, '720')
+            return getWebTrailersFileUrls(pageUrl, '720')
         print 'Error finding the trailer file URL'
         return ''
 
     url = links[0]['href']
 
-    return url
+    return [{'url': url, 'type': 'Trailer 1'}]
 
-def getWebTrailerFileUrl(pageUrl, res):
+def getWebTrailersFileUrls(pageUrl, res):
     """Take a trailer page URL and convert it to the URL of the trailer .mov file in the desired resolution"""
     """The trailer file URL is pulled out of the 'web' HTML file on the server."""
     resSegment = 'extralarge'
@@ -97,7 +97,7 @@ def getWebTrailerFileUrl(pageUrl, res):
         # Some trailers might only have a 480p file
         if res == '720':
             print "Could not find a trailer file URL with resolution '%s'. Retrying with '480'" % res
-            return getWebTrailerFileUrl(pageUrl, '480')
+            return getWebTrailerFileUrls(pageUrl, '480')
         print 'Error finding the trailer file URL'
         return ''
 
@@ -106,7 +106,7 @@ def getWebTrailerFileUrl(pageUrl, res):
     # Change link URL to the download URL by changing e.g. _720p to _h720p
     url = re.sub('_(\d+)p', '_h\\1p', url)
 
-    return url
+    return [{'url': url, 'type': 'Trailer 1'}]
 
 def getTrailerTitle(pageUrl):
     """Take a trailer page URL and return the title of the film, taken from the title tag on the page"""
@@ -157,17 +157,18 @@ def downloadTrailerFile(url, destdir, filename):
     with open(filePath, 'wb') as fp:
         shutil.copyfileobj(f, fp, chunkSize)
 
-def downloadTrailerFromPage(pageUrl, title, dlListPath, res, destdir):
+def downloadTrailersFromPage(pageUrl, title, dlListPath, res, destdir):
     """Takes a page on the Apple Trailers website and downloads the trailer for the movie on the page"""
     """Example URL: http://trailers.apple.com/trailers/lions_gate/thehungergames/"""
     print 'Checking for ' + title
-    trailerUrl = getTrailerFileUrl(pageUrl, res)
-    trailerFileName = getValidFilename(title) + '.Trailer.' + res + 'p.mov'
-    downloadedFiles = getDownloadedFiles(dlListPath)
-    if trailerUrl != '':
+    trailerUrls = getTrailerFileUrls(pageUrl, res)
+    for trailerUrl in trailerUrls:
+        trailerFileName = title + '.' + trailerUrl['type'] + '.' + res + 'p.mov'
+        trailerFileName = getValidFilename(trailerFileName)
+        downloadedFiles = getDownloadedFiles(dlListPath)
         if not trailerFileName in downloadedFiles:
-            print 'downloading ' + trailerUrl
-            downloadTrailerFile(trailerUrl, destdir, trailerFileName)
+            print 'downloading ' + trailerUrl['url']
+            downloadTrailerFile(trailerUrl['url'], destdir, trailerFileName)
             recordDownloadedFile(trailerFileName, dlListPath)
         else:
             print '*** File already downloaded, skipping: ' + trailerFileName
@@ -255,7 +256,7 @@ if __name__ == '__main__':
     if page != None:
         # The trailer page URL was passed in on the command line
         trailerTitle = getTrailerTitle(page)
-        downloadTrailerFromPage(page, trailerTitle, dlListPath, config['resolution'], config['download_dir'])
+        downloadTrailersFromPage(page, trailerTitle, dlListPath, config['resolution'], config['download_dir'])
 
     else:
         # Use the "Just Added" JSON file
@@ -263,4 +264,4 @@ if __name__ == '__main__':
     
         for trailer in newestTrailers:
             url = 'http://trailers.apple.com' + trailer['location']
-            downloadTrailerFromPage(url, trailer['title'], dlListPath, config['resolution'], config['download_dir'])
+            downloadTrailersFromPage(url, trailer['title'], dlListPath, config['resolution'], config['download_dir'])
