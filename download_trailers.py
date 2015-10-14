@@ -35,7 +35,7 @@ from bs4 import BeautifulSoup
 #############
 # Functions #
 #############
-def getTrailerFileUrls(pageUrl, res):
+def getTrailerFileUrls(pageUrl, res, types):
     iTunesResolutions = ['720', '1080']
     webResolutions = ['480', '720']
 
@@ -43,7 +43,7 @@ def getTrailerFileUrls(pageUrl, res):
 
     # Order matters here. Prefer the iTunes files over the web files.
     if res in iTunesResolutions:
-        urls = getITunesTrailersFileUrls(pageUrl, res)
+        urls = getITunesTrailersFileUrls(pageUrl, res, types)
     elif res in webResolutions:
         urls = getWebTrailersFileUrls(pageUrl, res)
     else:
@@ -53,7 +53,7 @@ def getTrailerFileUrls(pageUrl, res):
 
     return urls
 
-def getITunesTrailersFileUrls(pageUrl, res):
+def getITunesTrailersFileUrls(pageUrl, res, types):
     """Take a trailer page URL and convert it to the URL of the trailer .mov file in the desired resolution"""
     """The trailer file URL is pulled out of the 'iTunes' .inc file on the server."""
 
@@ -62,10 +62,10 @@ def getITunesTrailersFileUrls(pageUrl, res):
     incContents = incPage.read()
     incSoup = BeautifulSoup(incContents, "html.parser")
 
-    linkMatcher = "tlr1.*%sp" % res
+    linkMatcher = "_h%sp\.mov" % res
     links = incSoup.findAll(href=re.compile(linkMatcher))
     
-    if (len(links) != 1):
+    if (len(links) == 0):
         # Go down in resolution if file not found
         if res == '1080':
             print "Could not find a trailer file URL with resolution '%s'. Retrying with '720'" % res
@@ -74,11 +74,22 @@ def getITunesTrailersFileUrls(pageUrl, res):
             print "Could not find a trailer file URL with resolution '%s'. Retrying with the 'web' source" % res
             return getWebTrailersFileUrls(pageUrl, '720')
         print 'Error finding the trailer file URL'
-        return ''
+        return []
 
-    url = links[0]['href']
+    urls = []
+    for link in links:
+        videoType = link.find_parent(class_='trailer').find('h3').string
+        url = link['href']
 
-    return [{'url': url, 'type': 'Trailer', 'res': res}]
+        if shouldDownloadFile(types, videoType, url):
+            urlInfo = {
+                    'url': url,
+                    'type': videoType,
+                    'res': res
+            }
+            urls.append(urlInfo)
+
+    return urls
 
 def getWebTrailersFileUrls(pageUrl, res):
     """Take a trailer page URL and convert it to the URL of the trailer .mov file in the desired resolution"""
@@ -107,6 +118,23 @@ def getWebTrailersFileUrls(pageUrl, res):
     url = re.sub('_(\d+)p', '_h\\1p', url)
 
     return [{'url': url, 'type': 'Trailer', 'res': res}]
+
+def shouldDownloadFile(requestedTypes, videoType, url):
+    doDownload = False
+
+    if requestedTypes == "all":
+        doDownload = True
+
+    elif requestedTypes == "single_trailer":
+        doDownload = (videoType.lower() == "trailer")
+    
+    elif requestedTypes == "trailers":
+        if (videoType.lower().startswith("trailer") or
+            videoType.lower().startswith("teaser") or
+            "-tlr1_" in url):
+            doDownload = True
+
+    return doDownload
 
 def getTrailerTitle(pageUrl):
     """Take a trailer page URL and return the title of the film, taken from the title tag on the page"""
@@ -157,11 +185,11 @@ def downloadTrailerFile(url, destdir, filename):
     with open(filePath, 'wb') as fp:
         shutil.copyfileobj(f, fp, chunkSize)
 
-def downloadTrailersFromPage(pageUrl, title, dlListPath, res, destdir):
+def downloadTrailersFromPage(pageUrl, title, dlListPath, res, destdir, types):
     """Takes a page on the Apple Trailers website and downloads the trailer for the movie on the page"""
     """Example URL: http://trailers.apple.com/trailers/lions_gate/thehungergames/"""
     print 'Checking for ' + title
-    trailerUrls = getTrailerFileUrls(pageUrl, res)
+    trailerUrls = getTrailerFileUrls(pageUrl, res, types)
     for trailerUrl in trailerUrls:
         trailerFileName = title + '.' + trailerUrl['type'] + '.' + trailerUrl['res'] + 'p.mov'
         trailerFileName = getValidFilename(trailerFileName)
@@ -197,7 +225,8 @@ def getConfigValues():
     config = SafeConfigParser(
         defaults = {
             'resolution': '720',
-            'download_dir': scriptDir
+            'download_dir': scriptDir,
+            'video_types': 'single_trailer'
         }
     )
     configValues = config.defaults()
@@ -206,11 +235,13 @@ def getConfigValues():
         print 'No config file found.  Using default values.'
         print "    Resolution: %sp" % configValues['resolution']
         print "    Download Directory: %s" % configValues['download_dir']
+        print "    Video Types: %s" % configValues['video_types']
     else:
         config.read(configPath)
 
         configValues = config.defaults()
         validResolutions = ['480', '720', '1080']
+        validVideoTypes = ['single_trailer', 'trailers', 'all']
 
         # Validate the config options
         if configValues['resolution'] not in validResolutions:
@@ -220,6 +251,9 @@ def getConfigValues():
         if (len(configValues['download_dir']) < 1) or (not os.path.exists(configValues['download_dir'])):
             raise ValueError('The download directory must be a valid path')
 
+        if configValues['video_types'] not in validVideoTypes:
+            typesString = ', '.join(validVideoTypes)
+            raise ValueError("Invalid video type. Valid values: %s" % typesString)
 
     if (configValues['download_dir'][-1] != '/'):
         configValues['download_dir'] = "%s/" % configValues['download_dir']
@@ -256,7 +290,14 @@ if __name__ == '__main__':
     if page != None:
         # The trailer page URL was passed in on the command line
         trailerTitle = getTrailerTitle(page)
-        downloadTrailersFromPage(page, trailerTitle, dlListPath, config['resolution'], config['download_dir'])
+        downloadTrailersFromPage(
+            page,
+            trailerTitle,
+            dlListPath,
+            config['resolution'],
+            config['download_dir'],
+            config['video_types']
+        )
 
     else:
         # Use the "Just Added" JSON file
@@ -264,4 +305,11 @@ if __name__ == '__main__':
     
         for trailer in newestTrailers:
             url = 'http://trailers.apple.com' + trailer['location']
-            downloadTrailersFromPage(url, trailer['title'], dlListPath, config['resolution'], config['download_dir'])
+            downloadTrailersFromPage(
+                url,
+                trailer['title'],
+                dlListPath,
+                config['resolution'],
+                config['download_dir'],
+                config['video_types']
+            )
