@@ -45,7 +45,7 @@ def getTrailerFileUrls(pageUrl, res, types):
     if res in iTunesResolutions:
         urls = getITunesTrailersFileUrls(pageUrl, res, types)
     elif res in webResolutions:
-        urls = getWebTrailersFileUrls(pageUrl, res)
+        urls = getWebTrailersFileUrls(pageUrl, res, types)
     else:
         uniqueResolutions = list(set(iTunesResolutions + webResolutions))
         resString = ', '.join(uniqueResolutions)
@@ -91,33 +91,52 @@ def getITunesTrailersFileUrls(pageUrl, res, types):
 
     return urls
 
-def getWebTrailersFileUrls(pageUrl, res):
+def getWebTrailersFileUrls(pageUrl, res, types):
     """Take a trailer page URL and convert it to the URL of the trailer .mov file in the desired resolution"""
     """The trailer file URL is pulled out of the 'web' HTML file on the server."""
     resSegment = 'extralarge'
     if (res == '480'):
         resSegment = 'large'
 
-    incUrl = pageUrl + 'includes/trailer/' + resSegment + '.html'
+    # Get the page that describes which videos are available
+    incUrl = pageUrl + 'includes/' + resSegment + '.html'
     incPage = urllib.urlopen(incUrl)
     incContents = incPage.read()
     incSoup = BeautifulSoup(incContents, "html.parser")
-    links = incSoup.findAll('a', 'movieLink')
+    trailerElements = incSoup.findAll('li', class_='trailer')
 
-    if (len(links) != 1):
+    if (len(trailerElements) == 0):
         # Some trailers might only have a 480p file
         if res == '720':
             print "Could not find a trailer file URL with resolution '%s'. Retrying with '480'" % res
             return getWebTrailersFileUrls(pageUrl, '480')
         print 'Error finding the trailer file URL'
-        return ''
+        return []
 
-    url = links[0]['href']
+    urls = []
+    for element in trailerElements:
+        videoType = element.find('h3').string
 
-    # Change link URL to the download URL by changing e.g. _720p to _h720p
-    url = re.sub('_(\d+)p', '_h\\1p', url)
+        if shouldDownloadFile(types, videoType, ''):
+            # The video file URL is only in a separate include file
+            includeFileUrl = pageUrl + element.find('a', class_='link-play')['href']
+            incPage = urllib.urlopen(includeFileUrl)
+            incContents = incPage.read()
+            incSoup = BeautifulSoup(incContents, "html.parser")
+             
+            url = incSoup.find('a', class_='movieLink')['href']
 
-    return [{'url': url, 'type': 'Trailer', 'res': res}]
+            # Change link URL to the download URL by changing e.g. _720p to _h720p
+            url = re.sub('_(\d+)p', '_h\\1p', url)
+
+            urlInfo = {
+                    'url': url,
+                    'type': videoType,
+                    'res': res
+            }
+            urls.append(urlInfo)
+
+    return urls
 
 def shouldDownloadFile(requestedTypes, videoType, url):
     doDownload = False
