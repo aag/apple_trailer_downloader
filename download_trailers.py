@@ -60,7 +60,7 @@ def getITunesTrailersFileUrls(pageUrl, res, types):
     incUrl = pageUrl + '/includes/playlists/itunes.inc'
     incPage = urllib.urlopen(incUrl)
     incContents = incPage.read()
-    incSoup = BeautifulSoup(incContents, "html.parser")
+    incSoup = BeautifulSoup(incContents, 'html.parser')
 
     linkMatcher = "_h%sp\.mov" % res
     links = incSoup.findAll(href=re.compile(linkMatcher))
@@ -102,7 +102,7 @@ def getWebTrailersFileUrls(pageUrl, res, types):
     incUrl = pageUrl + 'includes/' + resSegment + '.html'
     incPage = urllib.urlopen(incUrl)
     incContents = incPage.read()
-    incSoup = BeautifulSoup(incContents, "html.parser")
+    incSoup = BeautifulSoup(incContents, 'html.parser')
     trailerElements = incSoup.findAll('li', class_='trailer')
 
     if (len(trailerElements) == 0):
@@ -122,7 +122,7 @@ def getWebTrailersFileUrls(pageUrl, res, types):
             includeFileUrl = pageUrl + element.find('a', class_='link-play')['href']
             incPage = urllib.urlopen(includeFileUrl)
             incContents = incPage.read()
-            incSoup = BeautifulSoup(incContents, "html.parser")
+            incSoup = BeautifulSoup(incContents, 'html.parser')
              
             url = incSoup.find('a', class_='movieLink')['href']
 
@@ -141,16 +141,16 @@ def getWebTrailersFileUrls(pageUrl, res, types):
 def shouldDownloadFile(requestedTypes, videoType, url):
     doDownload = False
 
-    if requestedTypes == "all":
+    if requestedTypes == 'all':
         doDownload = True
 
-    elif requestedTypes == "single_trailer":
-        doDownload = (videoType.lower() == "trailer")
+    elif requestedTypes == 'single_trailer':
+        doDownload = (videoType.lower() == 'trailer')
     
-    elif requestedTypes == "trailers":
-        if (videoType.lower().startswith("trailer") or
-            videoType.lower().startswith("teaser") or
-            "-tlr1_" in url):
+    elif requestedTypes == 'trailers':
+        if (videoType.lower().startswith('trailer') or
+            videoType.lower().startswith('teaser') or
+            videoType.lower() == 'first look'):
             doDownload = True
 
     return doDownload
@@ -159,7 +159,7 @@ def getTrailerTitle(pageUrl):
     """Take a trailer page URL and return the title of the film, taken from the title tag on the page"""
     trPage = urllib.urlopen(pageUrl)
     trContents = trPage.read()
-    trSoup = BeautifulSoup(trContents, "html.parser")
+    trSoup = BeautifulSoup(trContents, 'html.parser')
     titleTag = trSoup.html.head.title.string
 
     titleParts = titleTag.split(' - ')
