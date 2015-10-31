@@ -25,6 +25,7 @@
 # Some imports are declared inside of functions, so other functions in this
 # script can be used in other scripts, without requiring all of
 # the dependencies.
+import codecs
 import re
 import urllib
 import urllib2
@@ -169,16 +170,16 @@ def getDownloadedFiles(dlListPath):
     """Get the list of downloaded files from the text file"""
     fileList = []
     if (os.path.exists(dlListPath)):
-        f = open(dlListPath, 'r')
+        f = codecs.open(dlListPath, 'r', encoding='utf-8')
         for line in f.xreadlines():
-            fileList.append(line.strip())
+            fileList.append(convertToUnicode(line.strip()))
         f.close()
     return fileList
 
 def writeDownloadedFiles(fileList, dlListPath):
     """Write the list of downloaded files to the text file"""
     f = open(dlListPath, 'w')
-    newList = [filename + '\n' for filename in fileList]
+    newList = [(filename + '\n').encode('utf-8') for filename in fileList]
     f.writelines(newList)
     f.close()
 
@@ -212,6 +213,7 @@ def downloadTrailersFromPage(pageUrl, title, dlListPath, res, destdir, types):
     for trailerUrl in trailerUrls:
         trailerFileName = title + '.' + trailerUrl['type'] + '.' + trailerUrl['res'] + 'p.mov'
         trailerFileName = getValidFilename(trailerFileName)
+        trailerFileName = convertToUnicode(trailerFileName)
         downloadedFiles = getDownloadedFiles(dlListPath)
         if not trailerFileName in downloadedFiles:
             print 'downloading ' + trailerUrl['url']
@@ -278,6 +280,12 @@ def getConfigValues():
         configValues['download_dir'] = "%s/" % configValues['download_dir']
 
     return configValues
+
+def convertToUnicode(obj, encoding='utf-8'):
+    if isinstance(obj, basestring):
+        if not isinstance(obj, unicode):
+            obj = unicode(obj, encoding)
+    return obj
 
 
 #############
