@@ -229,7 +229,7 @@ def getValidFilename(name):
     various operating systems."""
     return "".join(s for s in name if s not in "\/:*?<>|#%&{}$!'\"@+`=");
 
-def getConfigValues():
+def getConfigValues(configPath):
     """Get the script's configuration values and return them in a dict
     
     If a config file exists, merge its values with the defaults. If no config
@@ -241,8 +241,9 @@ def getConfigValues():
     from ConfigParser import SafeConfigParser
 
     scriptDir = os.path.abspath(os.path.dirname(__file__))
-    configPath = "%s/settings.cfg" % scriptDir
- 
+    if configPath is None:
+        configPath = "%s/settings.cfg" % scriptDir
+     
     config = SafeConfigParser(
         defaults = {
             'resolution': '720',
@@ -253,7 +254,7 @@ def getConfigValues():
     configValues = config.defaults()
 
     if (not os.path.exists(configPath)):
-        print 'No config file found.  Using default values.'
+        print 'Config file not found.  Using default values.'
         print "    Resolution: %sp" % configValues['resolution']
         print "    Download Directory: %s" % configValues['download_dir']
         print "    Video Types: %s" % configValues['video_types']
@@ -300,12 +301,25 @@ if __name__ == '__main__':
             'With no arguments, will download all of the trailers in the current RSS feed. ' +
             'When a trailer page URL is specified, will only download the single trailer at that URL. ' + 
             '\n\nExample URL: http://trailers.apple.com/trailers/lions_gate/thehungergames/')
-    parser.add_argument('-u', action='store', dest='url', help='The URL of the Apple Trailers web page for a single trailer.')
+    parser.add_argument(
+        '-u',
+        action='store',
+        dest='url',
+        help='The URL of the Apple Trailers web page for a single trailer.'
+    )
+    parser.add_argument(
+        '-c',
+        action='store',
+        dest='config',
+        help='The location of the config file. Defaults to "settings.cfg"\n' +
+                '\tin the script directory.'
+    )
     results = parser.parse_args()
     page = results.url
+    configPath = results.config
 
     try:
-        config = getConfigValues()
+        config = getConfigValues(configPath)
     except ValueError as e:
         print "Configuration error: %s" % e
         print 'Exiting...'
