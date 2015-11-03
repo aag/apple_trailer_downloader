@@ -198,7 +198,7 @@ def downloadTrailerFile(url, destdir, filename):
     req = urllib2.Request(url, data, headers)
     f = urllib2.urlopen(req)
 
-    filePath = destdir + filename
+    filePath = os.path.join(destdir, filename)
     print "Saving file to %s" % filePath
     # Buffer 1MB at a time
     chunkSize = 1024 * 1024
@@ -297,26 +297,58 @@ if __name__ == '__main__':
     import json
     
     parser = argparse.ArgumentParser(description=
-            'Download movie trailers from the Apple website. ' +
-            'With no arguments, will download all of the trailers in the current RSS feed. ' +
-            'When a trailer page URL is specified, will only download the single trailer at that URL. ' + 
-            '\n\nExample URL: http://trailers.apple.com/trailers/lions_gate/thehungergames/')
+            'Download movie trailers from the Apple website. With no ' +
+            'arguments, will download all of the trailers in the current RSS ' +
+            'feed. When a trailer page URL is specified, will only download ' +
+            'the single trailer at that URL. Example URL: ' +
+            'http://trailers.apple.com/trailers/lions_gate/thehungergames/')
+
     parser.add_argument(
-        '-u',
+        '-c, --config',
+        action='store',
+        dest='config',
+        help='The location of the config file. Defaults to "settings.cfg"' +
+                'in the script directory.'
+    )
+
+    parser.add_argument(
+        '-d, --dir',
+        action='store',
+        dest='dir',
+        help='The directory where the trailers should be downloaded. ' +
+                'Defaults to the script directory.'
+    )
+
+    parser.add_argument(
+        '-l, --listfile',
+        action='store',
+        dest='filepath',
+        help='The location of the download list file. The names of the ' +
+                'previously downloaded trailers are stored in this file. ' +
+                'Defaults to "download_list.txt" in the download directory.'
+    )
+
+    parser.add_argument(
+        '-r, --resolution',
+        action='store',
+        dest='resolution',
+        help='The preferred video resolution to download. Valid options are ' +
+                '1080, 720, and 480.'
+    )
+
+    parser.add_argument(
+        '-u, --url',
         action='store',
         dest='url',
         help='The URL of the Apple Trailers web page for a single trailer.'
     )
-    parser.add_argument(
-        '-c',
-        action='store',
-        dest='config',
-        help='The location of the config file. Defaults to "settings.cfg"\n' +
-                '\tin the script directory.'
-    )
+
     results = parser.parse_args()
     page = results.url
     configPath = results.config
+    dlListPath = results.filepath
+    downloadDir = results.dir
+    resolution = results.resolution
 
     try:
         config = getConfigValues(configPath)
@@ -325,7 +357,14 @@ if __name__ == '__main__':
         print 'Exiting...'
         exit()
 
-    dlListPath = config['download_dir'] + 'download_list.txt'
+    if downloadDir is None:
+        downloadDir = config['download_dir']
+
+    if dlListPath is None:
+        dlListPath = downloadDir + 'download_list.txt'
+
+    if resolution is None:
+        resolution = config['resolution']
 
     # Do the download
     if page != None:
@@ -335,8 +374,8 @@ if __name__ == '__main__':
             page,
             trailerTitle,
             dlListPath,
-            config['resolution'],
-            config['download_dir'],
+            resolution,
+            downloadDir,
             config['video_types']
         )
 
@@ -350,7 +389,7 @@ if __name__ == '__main__':
                 url,
                 trailer['title'],
                 dlListPath,
-                config['resolution'],
-                config['download_dir'],
+                resolution,
+                downloadDir,
                 config['video_types']
             )
