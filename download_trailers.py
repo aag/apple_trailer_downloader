@@ -282,20 +282,9 @@ def getConfigValues(configPath):
 
     return configValues
 
-def convertToUnicode(obj, encoding='utf-8'):
-    if isinstance(obj, basestring):
-        if not isinstance(obj, unicode):
-            obj = unicode(obj, encoding)
-    return obj
-
-
-#############
-# Main Prog #
-#############
-if __name__ == '__main__':
+def getSettings():
     import argparse
-    import json
-    
+
     parser = argparse.ArgumentParser(description=
             'Download movie trailers from the Apple website. With no ' +
             'arguments, will download all of the trailers in the current RSS ' +
@@ -343,12 +332,21 @@ if __name__ == '__main__':
         help='The URL of the Apple Trailers web page for a single trailer.'
     )
 
+    parser.add_argument(
+        '-v, --videotypes',
+        action='store',
+        dest='types',
+        help='The types of videos to be downloaded. Valid options are ' +
+                'single_trailer, trailers, and all.'
+    )
+
     results = parser.parse_args()
     page = results.url
     configPath = results.config
     dlListPath = results.filepath
     downloadDir = results.dir
     resolution = results.resolution
+    videoTypes = results.types
 
     try:
         config = getConfigValues(configPath)
@@ -361,22 +359,50 @@ if __name__ == '__main__':
         downloadDir = config['download_dir']
 
     if dlListPath is None:
-        dlListPath = downloadDir + 'download_list.txt'
+        dlListPath = os.path.join(downloadDir, 'download_list.txt')
 
     if resolution is None:
         resolution = config['resolution']
 
+    if videoTypes is None:
+        videoTypes = config['video_types']
+
+    return {
+        'page': page,
+        'configPath': configPath,
+        'dlListPath': dlListPath,
+        'downloadDir': downloadDir,
+        'resolution': resolution,
+        'videoTypes': videoTypes
+    }
+
+
+def convertToUnicode(obj, encoding='utf-8'):
+    if isinstance(obj, basestring):
+        if not isinstance(obj, unicode):
+            obj = unicode(obj, encoding)
+    return obj
+
+
+#############
+# Main Prog #
+#############
+if __name__ == '__main__':
+    import json
+
+    settings = getSettings()
+    
     # Do the download
-    if page != None:
+    if settings['page'] != None:
         # The trailer page URL was passed in on the command line
-        trailerTitle = getTrailerTitle(page)
+        trailerTitle = getTrailerTitle(settings['page'])
         downloadTrailersFromPage(
-            page,
+            settings['page'],
             trailerTitle,
-            dlListPath,
-            resolution,
-            downloadDir,
-            config['video_types']
+            settings['dlListPath'],
+            settings['resolution'],
+            settings['downloadDir'],
+            settings['videoTypes']
         )
 
     else:
@@ -388,8 +414,8 @@ if __name__ == '__main__':
             downloadTrailersFromPage(
                 url,
                 trailer['title'],
-                dlListPath,
-                resolution,
-                downloadDir,
-                config['video_types']
+                settings['dlListPath'],
+                settings['resolution'],
+                settings['downloadDir'],
+                settings['videoTypes']
             )
