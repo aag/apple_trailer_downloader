@@ -50,6 +50,9 @@ looks for a `settings.cfg` file in its directory, so if you copy
 the script will find it and use it. Alternatively, you can use the `--config`
 option to specify a path to a config file.
 
+If a setting is specified in both the config file and a command-line option,
+the command-line setting will override the setting in the config file.
+
 The script stores a list of files it has already downloaded in in a text
 file.  Any trailer file listed in the download list will not be re-downloaded,
 even if the trailer file has already been deleted.  This allows you to delete
