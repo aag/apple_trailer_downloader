@@ -35,15 +35,30 @@ $ python download_trailers.py -u "http://trailers.apple.com/trailers/lions_gate/
 
 Configuration
 -------------
-You can customize the resolution and download directory if you want.  Copy
-`settings-example.cfg` to `settings.cfg` and change the values in it.
+You can customize several settings either with command-line
+options or with a config file. To see all available command-line options,
+run the script with the `--help` switch.
 
-The script stores a list of files it has already downloaded in the download
-directory, in the file `download_list.txt`.  Any trailer file listed
-in the download list will not be re-downloaded, even if the trailer file
-has already been deleted.  This allows you to delete trailers after you've
-watched them, but still run the script on a regular basis and only download
-trailers you've never seen before.
+```
+$ python download_trailers.py --help
+```
+
+You can also put settings in a config file. An example settings file,
+`settings-example.cfg` is included with the script. By default, the script
+looks for a `settings.cfg` file in its directory, so if you copy
+`settings-example.cfg` to `settings.cfg` and customize the values in it,
+the script will find it and use it. Alternatively, you can use the `--config`
+option to specify a path to a config file.
+
+The script stores a list of files it has already downloaded in in a text
+file.  Any trailer file listed in the download list will not be re-downloaded,
+even if the trailer file has already been deleted.  This allows you to delete
+trailers after you've watched them, but still run the script on a regular
+basis and only download trailers you've never seen before. By default the
+script stores the download list in the file `download_list.txt` in the
+download directory, but you can change the file location with the
+`--listfile` command-line option or with the `list_file` option in the
+config file.
 
 License
 -------
