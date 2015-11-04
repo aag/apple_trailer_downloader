@@ -229,7 +229,7 @@ def getValidFilename(name):
     various operating systems."""
     return "".join(s for s in name if s not in "\/:*?<>|#%&{}$!'\"@+`=");
 
-def getConfigValues(configPath):
+def getConfigValues(configPath, defaults):
     """Get the script's configuration values and return them in a dict
     
     If a config file exists, merge its values with the defaults. If no config
@@ -240,50 +240,33 @@ def getConfigValues(configPath):
     """
     from ConfigParser import SafeConfigParser
 
-    scriptDir = os.path.abspath(os.path.dirname(__file__))
-    if configPath is None:
-        configPath = "%s/settings.cfg" % scriptDir
-     
-    config = SafeConfigParser(
-        defaults = {
-            'resolution': '720',
-            'download_dir': scriptDir,
-            'video_types': 'single_trailer'
-        }
-    )
+    config = SafeConfigParser(defaults)
     configValues = config.defaults()
 
     if (not os.path.exists(configPath)):
         print 'Config file not found.  Using default values.'
-        print "    Resolution: %sp" % configValues['resolution']
-        print "    Download Directory: %s" % configValues['download_dir']
-        print "    Video Types: %s" % configValues['video_types']
     else:
+        print "Loading configuration from %s" % configPath
         config.read(configPath)
 
         configValues = config.defaults()
-        validResolutions = ['480', '720', '1080']
-        validVideoTypes = ['single_trailer', 'trailers', 'all']
-
-        # Validate the config options
-        if configValues['resolution'] not in validResolutions:
-            resString = ', '.join(validResolutions)
-            raise ValueError("Invalid resolution. Valid values: %s" % resString)
-
-        if (len(configValues['download_dir']) < 1) or (not os.path.exists(configValues['download_dir'])):
-            raise ValueError('The download directory must be a valid path')
-
-        if configValues['video_types'] not in validVideoTypes:
-            typesString = ', '.join(validVideoTypes)
-            raise ValueError("Invalid video type. Valid values: %s" % typesString)
-
-    if (configValues['download_dir'][-1] != '/'):
-        configValues['download_dir'] = "%s/" % configValues['download_dir']
 
     return configValues
 
 def getSettings():
     import argparse
+
+    # Don't include list_file in the defaults, so we can tell
+    # if it was in the config file or not.
+    scriptDir = os.path.abspath(os.path.dirname(__file__))
+    defaults = {
+        'download_dir': scriptDir,
+        'resolution': '720',
+        'video_types': 'single_trailer'
+    }
+
+    validResolutions = ['480', '720', '1080']
+    validVideoTypes = ['single_trailer', 'trailers', 'all']
 
     parser = argparse.ArgumentParser(description=
             'Download movie trailers from the Apple website. With no ' +
@@ -341,41 +324,68 @@ def getSettings():
     )
 
     results = parser.parse_args()
-    page = results.url
-    configPath = results.config
-    dlListPath = results.filepath
-    downloadDir = results.dir
-    resolution = results.resolution
-    videoTypes = results.types
+    args = {
+        'config_path': results.config,
+        'download_dir': results.dir,
+        'list_file': results.filepath,
+        'page': results.url,
+        'resolution': results.resolution,
+        'video_types': results.types,
+    }
+
+    # Remove all pairs that were not set on the command line.
+    setArgs = {}
+    for name, value in args.iteritems():
+        if value is not None:
+            setArgs[name] = value
+
+    configPath = args['config_path']
+    if configPath is None:
+        configPath = "%s/settings.cfg" % scriptDir
 
     try:
-        config = getConfigValues(configPath)
+        config = getConfigValues(configPath, defaults)
     except ValueError as e:
         print "Configuration error: %s" % e
         print 'Exiting...'
         exit()
 
-    if downloadDir is None:
-        downloadDir = config['download_dir']
+    settings = config.copy()
+    settings.update(setArgs)
 
-    if dlListPath is None:
-        dlListPath = os.path.join(downloadDir, 'download_list.txt')
+    if ('list_file' not in setArgs) and ('list_file' not in config):
+        settings['list_file'] = os.path.join(
+            settings['download_dir'],
+            'download_list.txt'
+        )
 
-    if resolution is None:
-        resolution = config['resolution']
+    settings['list_file'] = os.path.expanduser(settings['list_file'])
 
-    if videoTypes is None:
-        videoTypes = config['video_types']
+    # Validate the settings
+    settingsError = False
+    if settings['resolution'] not in validResolutions:
+        resString = ', '.join(validResolutions)
+        print "Configuration error: Invalid resolution. Valid values: %s" % resString
+        settingsError = True
 
-    return {
-        'page': page,
-        'configPath': configPath,
-        'dlListPath': dlListPath,
-        'downloadDir': downloadDir,
-        'resolution': resolution,
-        'videoTypes': videoTypes
-    }
+    if not os.path.exists(settings['download_dir']):
+        print 'Configuration error: The download directory must be a valid path'
+        settingsError = True
 
+    if settings['video_types'] not in validVideoTypes:
+        typesString = ', '.join(validVideoTypes)
+        print "Configuration error: Invalid video type. Valid values: %s" % typesString
+        settingsError = True
+
+    if not os.path.exists(os.path.dirname(settings['list_file'])):
+        print 'Configuration error: the list file directory must be a valid path'
+        settingsError = True
+
+    if settingsError:
+        print 'Exiting...'
+        exit()
+
+    return settings
 
 def convertToUnicode(obj, encoding='utf-8'):
     if isinstance(obj, basestring):
@@ -391,18 +401,25 @@ if __name__ == '__main__':
     import json
 
     settings = getSettings()
+
+    print "Using configuration values:"
+    for name in sorted(settings):
+        if name != 'config_path':
+            print "    {}: {}".format(name, settings[name])
+
+    print ""
     
     # Do the download
-    if settings['page'] != None:
+    if 'page' in settings:
         # The trailer page URL was passed in on the command line
         trailerTitle = getTrailerTitle(settings['page'])
         downloadTrailersFromPage(
             settings['page'],
             trailerTitle,
-            settings['dlListPath'],
+            settings['list_file'],
             settings['resolution'],
-            settings['downloadDir'],
-            settings['videoTypes']
+            settings['download_dir'],
+            settings['video_types']
         )
 
     else:
@@ -414,8 +431,8 @@ if __name__ == '__main__':
             downloadTrailersFromPage(
                 url,
                 trailer['title'],
-                settings['dlListPath'],
+                settings['list_file'],
                 settings['resolution'],
-                settings['downloadDir'],
-                settings['videoTypes']
+                settings['download_dir'],
+                settings['video_types']
             )
