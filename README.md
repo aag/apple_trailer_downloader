@@ -45,10 +45,12 @@ $ python download_trailers.py --help
 
 You can also put settings in a config file. An example settings file,
 `settings-example.cfg` is included with the script. By default, the script
-looks for a `settings.cfg` file in its directory, so if you copy
-`settings-example.cfg` to `settings.cfg` and customize the values in it,
-the script will find it and use it. Alternatively, you can use the `--config`
-option to specify a path to a config file.
+first looks for a `settings.cfg` file in its directory, and if it doesn't find
+one there, it looks for a file `.trailers.cfg` in the user's home directory.
+Whichever one it finds first will be used as the configuration file. You can
+copy `settings-example.cfg` to either `settings.cfg` or `.trailers.cfg` and
+customize the values in it. Alternatively, you can use the `--config` option
+to specify a path to a config file.
 
 If a setting is specified in both the config file and a command-line option,
 the command-line setting will override the setting in the config file.
