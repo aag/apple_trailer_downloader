@@ -233,23 +233,29 @@ def getConfigValues(configPath, defaults):
     """Get the script's configuration values and return them in a dict
     
     If a config file exists, merge its values with the defaults. If no config
-    file exists, just return the defaults. Validates the settings in the
-    config file and raises a ValueError exception if any of the given settings
-    are invalid.
-    
+    file exists, just return the defaults.
     """
     from ConfigParser import SafeConfigParser
 
     config = SafeConfigParser(defaults)
     configValues = config.defaults()
 
-    if (not os.path.exists(configPath)):
-        print 'Config file not found.  Using default values.'
-    else:
-        print "Loading configuration from %s" % configPath
-        config.read(configPath)
+    configPaths = [
+        configPath,
+        os.path.join(os.path.expanduser('~'), '.trailers.cfg'),
+    ]
 
-        configValues = config.defaults()
+    configFileFound = False
+    for path in configPaths:
+        if os.path.exists(path):
+            print "Loading configuration from %s" % path
+            configFileFound = True
+            config.read(path)
+            configValues = config.defaults()
+            break
+
+    if not configFileFound:
+        print 'Config file not found.  Using default values.'
 
     return configValues
 
