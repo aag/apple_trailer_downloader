@@ -192,18 +192,27 @@ def recordDownloadedFile(filename, dlListPath):
 def downloadTrailerFile(url, destdir, filename):
     """Accepts a URL to a trailer video file and downloads it"""
     """You have to spoof the user agent or the site will deny the request"""
-    user_agent = 'QuickTime/7.6.2'
+    filePath = os.path.join(destdir, filename)
+
+    existingFileSize = 0
+    if os.path.exists(filePath):
+        existingFileSize = os.path.getsize(filePath)
+
     data = None
-    headers = { 'User-Agent' : user_agent }
+    headers = { 'User-Agent' : 'QuickTime/7.6.2' }
     req = urllib2.Request(url, data, headers)
     f = urllib2.urlopen(req)
+    metaInfo = f.info()
+    dlFileSize = int(metaInfo.getheaders("Content-Length")[0])
 
-    filePath = os.path.join(destdir, filename)
-    print "Saving file to %s" % filePath
-    # Buffer 1MB at a time
-    chunkSize = 1024 * 1024
-    with open(filePath, 'wb') as fp:
-        shutil.copyfileobj(f, fp, chunkSize)
+    if dlFileSize == existingFileSize:
+        print "*** File already downloaded, skipping."
+    else:
+        print "Saving file to %s" % filePath
+        # Buffer 1MB at a time
+        chunkSize = 1024 * 1024
+        with open(filePath, 'wb') as fp:
+            shutil.copyfileobj(f, fp, chunkSize)
 
 def downloadTrailersFromPage(pageUrl, title, dlListPath, res, destdir, types):
     """Takes a page on the Apple Trailers website and downloads the trailer for the movie on the page"""
