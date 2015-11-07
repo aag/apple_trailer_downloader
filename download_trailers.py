@@ -368,6 +368,8 @@ def getSettings():
     settings = config.copy()
     settings.update(setArgs)
 
+    settings['download_dir'] = os.path.expanduser(settings['download_dir'])
+
     if ('list_file' not in setArgs) and ('list_file' not in config):
         settings['list_file'] = os.path.join(
             settings['download_dir'],
