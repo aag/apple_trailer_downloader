@@ -192,25 +192,42 @@ def recordDownloadedFile(filename, dlListPath):
 def downloadTrailerFile(url, destdir, filename):
     """Accepts a URL to a trailer video file and downloads it"""
     """You have to spoof the user agent or the site will deny the request"""
+    """Resumes partial downloads and skips fully-downloaded files"""
     filePath = os.path.join(destdir, filename)
+    fileExists = os.path.exists(filePath)
 
     existingFileSize = 0
-    if os.path.exists(filePath):
+    if fileExists:
         existingFileSize = os.path.getsize(filePath)
 
     data = None
     headers = { 'User-Agent' : 'QuickTime/7.6.2' }
-    req = urllib2.Request(url, data, headers)
-    f = urllib2.urlopen(req)
-    metaInfo = f.info()
-    dlFileSize = int(metaInfo.getheaders("Content-Length")[0])
 
-    if dlFileSize == existingFileSize:
-        print "*** File already downloaded, skipping."
+    resumeDownload = False
+    if fileExists and (existingFileSize > 0):
+        resumeDownload = True
+        headers['Range'] = 'bytes={}-'.format(existingFileSize)
+
+    req = urllib2.Request(url, data, headers)
+
+    try:
+        f = urllib2.urlopen(req)
+    except urllib2.HTTPError as e:
+        if e.code == 416:
+            print "*** File already downloaded, skipping"
+            return
+        else:
+            raise
+
+    # Buffer 1MB at a time
+    chunkSize = 1024 * 1024
+
+    if resumeDownload:
+        print "Resuming file %s" % filePath
+        with open(filePath, 'ab') as fp:
+            shutil.copyfileobj(f, fp, chunkSize)
     else:
         print "Saving file to %s" % filePath
-        # Buffer 1MB at a time
-        chunkSize = 1024 * 1024
         with open(filePath, 'wb') as fp:
             shutil.copyfileobj(f, fp, chunkSize)
 
