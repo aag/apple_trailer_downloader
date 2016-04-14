@@ -26,11 +26,12 @@
 # script can be used in other scripts, without requiring all of
 # the dependencies.
 import codecs
+import logging
+import os.path
 import re
+import shutil
 import urllib
 import urllib2
-import os.path
-import shutil
 from bs4 import BeautifulSoup
 
 #############
@@ -69,12 +70,12 @@ def getITunesTrailersFileUrls(pageUrl, res, types):
     if (len(links) == 0):
         # Go down in resolution if file not found
         if res == '1080':
-            print "Could not find a trailer file URL with resolution '%s'. Retrying with '720'" % res
+            logging.warning("Could not find a trailer file URL with resolution '%s'. Retrying with '720'" % res)
             return getITunesTrailersFileUrls(pageUrl, '720')
         if res == '720':
-            print "Could not find a trailer file URL with resolution '%s'. Retrying with the 'web' source" % res
+            logging.warning("Could not find a trailer file URL with resolution '%s'. Retrying with the 'web' source" % res)
             return getWebTrailersFileUrls(pageUrl, '720')
-        print 'Error finding the trailer file URL'
+        logging.error('Error finding the trailer file URL')
         return []
 
     urls = []
@@ -109,9 +110,9 @@ def getWebTrailersFileUrls(pageUrl, res, types):
     if (len(trailerElements) == 0):
         # Some trailers might only have a 480p file
         if res == '720':
-            print "Could not find a trailer file URL with resolution '%s'. Retrying with '480'" % res
+            logging.warning("Could not find a trailer file URL with resolution '%s'. Retrying with '480'" % res)
             return getWebTrailersFileUrls(pageUrl, '480')
-        print 'Error finding the trailer file URL'
+        logging.error('Error finding the trailer file URL')
         return []
 
     urls = []
@@ -214,7 +215,7 @@ def downloadTrailerFile(url, destdir, filename):
         f = urllib2.urlopen(req)
     except urllib2.HTTPError as e:
         if e.code == 416:
-            print "*** File already downloaded, skipping"
+            logging.debug("*** File already downloaded, skipping")
             return
         else:
             raise
@@ -223,18 +224,18 @@ def downloadTrailerFile(url, destdir, filename):
     chunkSize = 1024 * 1024
 
     if resumeDownload:
-        print "Resuming file %s" % filePath
+        logging.info("Resuming file %s" % filePath)
         with open(filePath, 'ab') as fp:
             shutil.copyfileobj(f, fp, chunkSize)
     else:
-        print "Saving file to %s" % filePath
+        logging.info("Saving file to %s" % filePath)
         with open(filePath, 'wb') as fp:
             shutil.copyfileobj(f, fp, chunkSize)
 
 def downloadTrailersFromPage(pageUrl, title, dlListPath, res, destdir, types):
     """Takes a page on the Apple Trailers website and downloads the trailer for the movie on the page"""
     """Example URL: http://trailers.apple.com/trailers/lions_gate/thehungergames/"""
-    print 'Checking for ' + title
+    logging.debug('Checking for ' + title)
     trailerUrls = getTrailerFileUrls(pageUrl, res, types)
     for trailerUrl in trailerUrls:
         trailerFileName = title + '.' + trailerUrl['type'] + '.' + trailerUrl['res'] + 'p.mov'
@@ -242,11 +243,11 @@ def downloadTrailersFromPage(pageUrl, title, dlListPath, res, destdir, types):
         trailerFileName = convertToUnicode(trailerFileName)
         downloadedFiles = getDownloadedFiles(dlListPath)
         if not trailerFileName in downloadedFiles:
-            print 'downloading ' + trailerUrl['url']
+            logging.info('downloading ' + trailerUrl['url'])
             downloadTrailerFile(trailerUrl['url'], destdir, trailerFileName)
             recordDownloadedFile(trailerFileName, dlListPath)
         else:
-            print '*** File already downloaded, skipping: ' + trailerFileName
+            logging.debug('*** File already downloaded, skipping: ' + trailerFileName)
 
 def getValidFilename(name):
     """Remove characters from the given string which appear in a blacklist.
@@ -274,7 +275,6 @@ def getConfigValues(configPath, defaults):
     configFileFound = False
     for path in configPaths:
         if os.path.exists(path):
-            print "Loading configuration from %s" % path
             configFileFound = True
             config.read(path)
             configValues = config.defaults()
@@ -294,11 +294,13 @@ def getSettings():
     defaults = {
         'download_dir': scriptDir,
         'resolution': '720',
-        'video_types': 'single_trailer'
+        'video_types': 'single_trailer',
+        'output_level': 'debug',
     }
 
     validResolutions = ['480', '720', '1080']
     validVideoTypes = ['single_trailer', 'trailers', 'all']
+    validOutputLevels = ['debug', 'downloads', 'error']
 
     parser = argparse.ArgumentParser(description=
             'Download movie trailers from the Apple website. With no ' +
@@ -355,6 +357,14 @@ def getSettings():
                 'single_trailer, trailers, and all.'
     )
 
+    parser.add_argument(
+        '-o, --output_level',
+        action='store',
+        dest='output',
+        help='The types level of console output. Valid options are ' +
+                'debug, downloads, and error.'
+    )
+
     results = parser.parse_args()
     args = {
         'config_path': results.config,
@@ -363,6 +373,7 @@ def getSettings():
         'page': results.url,
         'resolution': results.resolution,
         'video_types': results.types,
+        'output_level': results.output,
     }
 
     # Remove all pairs that were not set on the command line.
@@ -386,6 +397,7 @@ def getSettings():
     settings.update(setArgs)
 
     settings['download_dir'] = os.path.expanduser(settings['download_dir'])
+    settings['config_path'] = configPath
 
     if ('list_file' not in setArgs) and ('list_file' not in config):
         settings['list_file'] = os.path.join(
@@ -411,6 +423,11 @@ def getSettings():
         print "Configuration error: Invalid video type. Valid values: %s" % typesString
         settingsError = True
 
+    if settings['output_level'] not in validOutputLevels:
+        outputString = ', '.join(validOutputLevels)
+        print "Configuration error: Invalid output level. Valid values: %s" % outputString
+        settingsError = True
+
     if not os.path.exists(os.path.dirname(settings['list_file'])):
         print 'Configuration error: the list file directory must be a valid path'
         settingsError = True
@@ -420,6 +437,18 @@ def getSettings():
         exit()
 
     return settings
+
+def configureLogging(output_level):
+    loglevel = 'DEBUG'
+    if (output_level == 'downloads'):
+        loglevel = 'INFO'
+    elif (output_level == 'error'):
+        loglevel = 'ERROR'
+
+    numeric_level = getattr(logging, loglevel, None)
+    if not isinstance(numeric_level, int):
+        raise ValueError('Invalid log level: %s' % loglevel)
+    logging.basicConfig(format='%(message)s', level=loglevel)
 
 def convertToUnicode(obj, encoding='utf-8'):
     if isinstance(obj, basestring):
@@ -435,13 +464,15 @@ if __name__ == '__main__':
     import json
 
     settings = getSettings()
+    configureLogging(settings['output_level'])
 
-    print "Using configuration values:"
+    logging.debug("Using configuration values:")
+    logging.debug("Loaded configuration from %s" % settings['config_path'])
     for name in sorted(settings):
         if name != 'config_path':
-            print "    {}: {}".format(name, settings[name])
+            logging.debug("    {}: {}".format(name, settings[name]))
 
-    print ""
+    logging.debug("")
     
     # Do the download
     if 'page' in settings:
