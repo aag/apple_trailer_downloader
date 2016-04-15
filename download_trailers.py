@@ -243,7 +243,7 @@ def downloadTrailersFromPage(pageUrl, title, dlListPath, res, destdir, types):
         trailerFileName = convertToUnicode(trailerFileName)
         downloadedFiles = getDownloadedFiles(dlListPath)
         if not trailerFileName in downloadedFiles:
-            logging.info('Downloading "' + title + '" (' + trailerFileName + ')')
+            logging.info('Downloading "' + title + '" ' + trailerUrl['type'] + ' (' + trailerFileName + ')')
             downloadTrailerFile(trailerUrl['url'], destdir, trailerFileName)
             recordDownloadedFile(trailerFileName, dlListPath)
         else:
