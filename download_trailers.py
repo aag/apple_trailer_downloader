@@ -224,18 +224,18 @@ def downloadTrailerFile(url, destdir, filename):
     chunkSize = 1024 * 1024
 
     if resumeDownload:
-        logging.info("Resuming file %s" % filePath)
+        logging.debug("  Resuming file %s" % filePath)
         with open(filePath, 'ab') as fp:
             shutil.copyfileobj(f, fp, chunkSize)
     else:
-        logging.info("Saving file to %s" % filePath)
+        logging.debug("  Saving file to %s" % filePath)
         with open(filePath, 'wb') as fp:
             shutil.copyfileobj(f, fp, chunkSize)
 
 def downloadTrailersFromPage(pageUrl, title, dlListPath, res, destdir, types):
     """Takes a page on the Apple Trailers website and downloads the trailer for the movie on the page"""
     """Example URL: http://trailers.apple.com/trailers/lions_gate/thehungergames/"""
-    logging.debug('Checking for ' + title)
+    logging.debug('Checking for "' + title + '"')
     trailerUrls = getTrailerFileUrls(pageUrl, res, types)
     for trailerUrl in trailerUrls:
         trailerFileName = title + '.' + trailerUrl['type'] + '.' + trailerUrl['res'] + 'p.mov'
@@ -243,7 +243,7 @@ def downloadTrailersFromPage(pageUrl, title, dlListPath, res, destdir, types):
         trailerFileName = convertToUnicode(trailerFileName)
         downloadedFiles = getDownloadedFiles(dlListPath)
         if not trailerFileName in downloadedFiles:
-            logging.info('downloading ' + trailerUrl['url'])
+            logging.info('Downloading "' + title + '" (' + trailerFileName + ')')
             downloadTrailerFile(trailerUrl['url'], destdir, trailerFileName)
             recordDownloadedFile(trailerFileName, dlListPath)
         else:
