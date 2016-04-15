@@ -361,7 +361,7 @@ def getSettings():
         '-o, --output_level',
         action='store',
         dest='output',
-        help='The types level of console output. Valid options are ' +
+        help='The level of console output. Valid options are ' +
                 'debug, downloads, and error.'
     )
 
