@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 # This is a Python script to download HD trailers from the Apple Trailers
 # website. It uses the "Just Added" JSON endpoint to discover new trailers and
