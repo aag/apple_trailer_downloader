@@ -217,8 +217,12 @@ def downloadTrailerFile(url, destdir, filename):
         if e.code == 416:
             logging.debug("*** File already downloaded, skipping")
             return
+        elif e.code == 404:
+            logging.error("*** Error downloading file: file not found")
+            return
         else:
-            raise
+            logging.error("*** Error downloading file")
+            return
 
     # Buffer 1MB at a time
     chunkSize = 1024 * 1024
