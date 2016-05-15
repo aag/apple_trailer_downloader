@@ -30,6 +30,7 @@ import logging
 import os.path
 import re
 import shutil
+import socket
 import urllib
 import urllib2
 from bs4 import BeautifulSoup
@@ -223,18 +224,25 @@ def downloadTrailerFile(url, destdir, filename):
         else:
             logging.error("*** Error downloading file")
             return
+    except urllib2.URLError as e:
+        logging.error("*** Error downloading file")
+        return
 
     # Buffer 1MB at a time
     chunkSize = 1024 * 1024
 
-    if resumeDownload:
-        logging.debug("  Resuming file %s" % filePath)
-        with open(filePath, 'ab') as fp:
-            shutil.copyfileobj(f, fp, chunkSize)
-    else:
-        logging.debug("  Saving file to %s" % filePath)
-        with open(filePath, 'wb') as fp:
-            shutil.copyfileobj(f, fp, chunkSize)
+    try:
+        if resumeDownload:
+            logging.debug("  Resuming file %s" % filePath)
+            with open(filePath, 'ab') as fp:
+                shutil.copyfileobj(f, fp, chunkSize)
+        else:
+            logging.debug("  Saving file to %s" % filePath)
+            with open(filePath, 'wb') as fp:
+                shutil.copyfileobj(f, fp, chunkSize)
+    except socket.error, msg:
+        logging.error("*** Network error while downloading file: %s" % msg)
+        return
 
 def downloadTrailersFromPage(pageUrl, title, dlListPath, res, destdir, types):
     """Takes a page on the Apple Trailers website and downloads the trailer for the movie on the page"""
