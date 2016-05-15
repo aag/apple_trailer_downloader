@@ -71,10 +71,10 @@ def getITunesTrailersFileUrls(pageUrl, res, types):
         # Go down in resolution if file not found
         if res == '1080':
             logging.warning("Could not find a trailer file URL with resolution '%s'. Retrying with '720'" % res)
-            return getITunesTrailersFileUrls(pageUrl, '720')
+            return getITunesTrailersFileUrls(pageUrl, '720', types)
         if res == '720':
             logging.warning("Could not find a trailer file URL with resolution '%s'. Retrying with the 'web' source" % res)
-            return getWebTrailersFileUrls(pageUrl, '720')
+            return getWebTrailersFileUrls(pageUrl, '720', types)
         logging.error('Error finding the trailer file URL')
         return []
 
@@ -111,7 +111,7 @@ def getWebTrailersFileUrls(pageUrl, res, types):
         # Some trailers might only have a 480p file
         if res == '720':
             logging.warning("Could not find a trailer file URL with resolution '%s'. Retrying with '480'" % res)
-            return getWebTrailersFileUrls(pageUrl, '480')
+            return getWebTrailersFileUrls(pageUrl, '480', types)
         logging.error('Error finding the trailer file URL')
         return []
 
