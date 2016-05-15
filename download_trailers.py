@@ -83,7 +83,7 @@ def getITunesTrailersFileUrls(pageUrl, res, types):
         videoType = link.find_parent(class_='trailer').find('h3').string
         url = link['href']
 
-        if shouldDownloadFile(types, videoType, url):
+        if shouldDownloadFile(types, videoType):
             urlInfo = {
                     'url': url,
                     'type': videoType,
@@ -119,7 +119,7 @@ def getWebTrailersFileUrls(pageUrl, res, types):
     for element in trailerElements:
         videoType = element.find('h3').string
 
-        if shouldDownloadFile(types, videoType, ''):
+        if shouldDownloadFile(types, videoType):
             # The video file URL is only in a separate include file
             includeFileUrl = pageUrl + element.find('a', class_='link-play')['href']
             incPage = urllib.urlopen(includeFileUrl)
@@ -140,7 +140,7 @@ def getWebTrailersFileUrls(pageUrl, res, types):
 
     return urls
 
-def shouldDownloadFile(requestedTypes, videoType, url):
+def shouldDownloadFile(requestedTypes, videoType):
     doDownload = False
 
     if requestedTypes == 'all':
