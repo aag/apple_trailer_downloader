@@ -46,7 +46,7 @@ def getTrailerFileUrls(pageUrl, res, types):
     for clip in filmData['clips']:
         videoType = clip['title']
 
-        if appleSize not in clip['versions']['enus']['sizes']:
+        if appleSize in clip['versions']['enus']['sizes']:
             fileInfo = clip['versions']['enus']['sizes'][appleSize]
             fileUrl = convertSrcUrlToFileUrl(fileInfo['src'], res)
 
