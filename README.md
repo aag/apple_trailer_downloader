@@ -2,20 +2,8 @@ Apple Trailers Downloader
 =========================
 This is a Python script to download HD trailers from the Apple Trailers website.
 It uses the "Just Added" JSON file that is also used by the web interface to
-find new trailers and keeps track of the ones it has already downloaded so
+find new trailers, and keeps track of the ones it has already downloaded so
 they aren't re-downloaded.
-
-Dependencies
-------------
-The script depends on the following imports:
-
-* Beautiful Soup 4 (http://www.crummy.com/software/BeautifulSoup/)
-
-You can install Beautiful Soup with pip:
-
-```
-$ pip install beautifulsoup4
-```
 
 Using
 -----
