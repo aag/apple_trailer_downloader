@@ -28,118 +28,53 @@
 import codecs
 import logging
 import os.path
-import re
 import shutil
 import socket
 import urllib
 import urllib2
-from bs4 import BeautifulSoup
 
 #############
 # Functions #
 #############
 def getTrailerFileUrls(pageUrl, res, types):
-    iTunesResolutions = ['720', '1080']
-    webResolutions = ['480', '720']
-
     urls = []
 
-    # Order matters here. Prefer the iTunes files over the web files.
-    if res in iTunesResolutions:
-        urls = getITunesTrailersFileUrls(pageUrl, res, types)
-    elif res in webResolutions:
-        urls = getWebTrailersFileUrls(pageUrl, res, types)
-    else:
-        uniqueResolutions = list(set(iTunesResolutions + webResolutions))
-        resString = ', '.join(uniqueResolutions)
+    filmData = json.load(urllib.urlopen(pageUrl + '/data/page.json'))
+    title = filmData['page']['movie_title']
+    appleSize = mapResToAppleSize(res)
+        
+    for clip in filmData['clips']:
+        videoType = clip['title']
+
+        if appleSize not in clip['versions']['enus']['sizes']:
+            fileInfo = clip['versions']['enus']['sizes'][appleSize]
+            fileUrl = convertSrcUrlToFileUrl(fileInfo['src'], res)
+
+            if shouldDownloadFile(types, videoType):
+                urlInfo = {
+                        'res': res,
+                        'title': title,
+                        'type': videoType,
+                        'url': fileUrl,
+                }
+                urls.append(urlInfo)
+        elif shouldDownloadFile(types, videoType):
+            logging.error('*** No {}p file found for {}'.format(res, videoType))
+
+    return urls
+
+def mapResToAppleSize(res):
+    resMapping = {'480': 'sd', '720': 'hd720', '1080': 'hd1080'}
+    if not res in resMapping:
+        resString = ', '.join(resMapping.keys())
         raise ValueError("Invalid resolution. Valid values: %s" % resString)
 
-    return urls
+    return resMapping[res]
 
-def getITunesTrailersFileUrls(pageUrl, res, types):
-    """Take a trailer page URL and convert it to the URL of the trailer .mov file in the desired resolution"""
-    """The trailer file URL is pulled out of the 'iTunes' .inc file on the server."""
-
-    incUrl = pageUrl + '/includes/playlists/itunes.inc'
-    incPage = urllib.urlopen(incUrl)
-    incContents = incPage.read()
-    incSoup = BeautifulSoup(incContents, 'html.parser')
-
-    linkMatcher = "_h%sp\.mov" % res
-    links = incSoup.findAll(href=re.compile(linkMatcher))
-    
-    if (len(links) == 0):
-        # Go down in resolution if file not found
-        if res == '1080':
-            logging.warning("Could not find a trailer file URL with resolution '%s'. Retrying with '720'" % res)
-            return getITunesTrailersFileUrls(pageUrl, '720', types)
-        if res == '720':
-            logging.warning("Could not find a trailer file URL with resolution '%s'. Retrying with the 'web' source" % res)
-            return getWebTrailersFileUrls(pageUrl, '720', types)
-        logging.error('Error finding the trailer file URL')
-        return []
-
-    urls = []
-    for link in links:
-        videoType = link.find_parent(class_='trailer').find('h3').string
-        url = link['href']
-
-        if shouldDownloadFile(types, videoType):
-            urlInfo = {
-                    'url': url,
-                    'type': videoType,
-                    'res': res
-            }
-            urls.append(urlInfo)
-
-    return urls
-
-def getWebTrailersFileUrls(pageUrl, res, types):
-    """Take a trailer page URL and convert it to the URL of the trailer .mov file in the desired resolution"""
-    """The trailer file URL is pulled out of the 'web' HTML file on the server."""
-    resSegment = 'extralarge'
-    if (res == '480'):
-        resSegment = 'large'
-
-    # Get the page that describes which videos are available
-    incUrl = pageUrl + 'includes/' + resSegment + '.html'
-    incPage = urllib.urlopen(incUrl)
-    incContents = incPage.read()
-    incSoup = BeautifulSoup(incContents, 'html.parser')
-    trailerElements = incSoup.findAll('li', class_='trailer')
-
-    if (len(trailerElements) == 0):
-        # Some trailers might only have a 480p file
-        if res == '720':
-            logging.warning("Could not find a trailer file URL with resolution '%s'. Retrying with '480'" % res)
-            return getWebTrailersFileUrls(pageUrl, '480', types)
-        logging.error('Error finding the trailer file URL')
-        return []
-
-    urls = []
-    for element in trailerElements:
-        videoType = element.find('h3').string
-
-        if shouldDownloadFile(types, videoType):
-            # The video file URL is only in a separate include file
-            includeFileUrl = pageUrl + element.find('a', class_='link-play')['href']
-            incPage = urllib.urlopen(includeFileUrl)
-            incContents = incPage.read()
-            incSoup = BeautifulSoup(incContents, 'html.parser')
-             
-            url = incSoup.find('a', class_='movieLink')['href']
-
-            # Change link URL to the download URL by changing e.g. _720p to _h720p
-            url = re.sub('_(\d+)p', '_h\\1p', url)
-
-            urlInfo = {
-                    'url': url,
-                    'type': videoType,
-                    'res': res
-            }
-            urls.append(urlInfo)
-
-    return urls
+def convertSrcUrlToFileUrl(srcUrl, res):
+    srcEnding = "_%sp.mov" % res
+    fileEnding = "_h%sp.mov" % res
+    return srcUrl.replace(srcEnding, fileEnding)
 
 def shouldDownloadFile(requestedTypes, videoType):
     doDownload = False
@@ -157,16 +92,6 @@ def shouldDownloadFile(requestedTypes, videoType):
             doDownload = True
 
     return doDownload
-
-def getTrailerTitle(pageUrl):
-    """Take a trailer page URL and return the title of the film, taken from the title tag on the page"""
-    trPage = urllib.urlopen(pageUrl)
-    trContents = trPage.read()
-    trSoup = BeautifulSoup(trContents, 'html.parser')
-    titleTag = trSoup.html.head.title.string
-
-    titleParts = titleTag.split(' - ')
-    return titleParts[0]
 
 def getDownloadedFiles(dlListPath):
     """Get the list of downloaded files from the text file"""
@@ -244,16 +169,16 @@ def downloadTrailerFile(url, destdir, filename):
         logging.error("*** Network error while downloading file: %s" % msg)
         return
 
-def downloadTrailersFromPage(pageUrl, title, dlListPath, res, destdir, types):
+def downloadTrailersFromPage(pageUrl, dlListPath, res, destdir, types):
     """Takes a page on the Apple Trailers website and downloads the trailer for the movie on the page"""
     """Example URL: http://trailers.apple.com/trailers/lions_gate/thehungergames/"""
-    logging.debug('Checking for "' + title + '"')
+
+    logging.debug('Checking for files at ' + pageUrl)
     trailerUrls = getTrailerFileUrls(pageUrl, res, types)
+    downloadedFiles = getDownloadedFiles(dlListPath)
+
     for trailerUrl in trailerUrls:
-        trailerFileName = title + '.' + trailerUrl['type'] + '.' + trailerUrl['res'] + 'p.mov'
-        trailerFileName = getValidFilename(trailerFileName)
-        trailerFileName = convertToUnicode(trailerFileName)
-        downloadedFiles = getDownloadedFiles(dlListPath)
+        trailerFileName = getTrailerFilename(trailerUrl['title'], trailerUrl['type'], trailerUrl['res'])
         if not trailerFileName in downloadedFiles:
             logging.info('Downloading ' + trailerUrl['type'] + ': ' + trailerFileName)
             downloadTrailerFile(trailerUrl['url'], destdir, trailerFileName)
@@ -261,12 +186,15 @@ def downloadTrailersFromPage(pageUrl, title, dlListPath, res, destdir, types):
         else:
             logging.debug('*** File already downloaded, skipping: ' + trailerFileName)
 
-def getValidFilename(name):
-    """Remove characters from the given string which appear in a blacklist.
+def getTrailerFilename(filmTitle, videoType, res):
+    """Take video info and convert it to the correct filename.
 
-    The blacklist contains characters that should not be used in filenames on
-    various operating systems."""
-    return "".join(s for s in name if s not in "\/:*?<>|#%&{}$!'\"@+`=");
+    In addition to stripping leading and trailing whitespace from the title
+    and converting to unicode, this function also removes characters that
+    should not be used in filenames on various operating systems."""
+    trailerFileName = filmTitle.strip() + '.' + videoType + '.' + res + 'p.mov'
+    trailerFileName = convertToUnicode(trailerFileName)
+    return "".join(s for s in trailerFileName if s not in "\/:*?<>|#%&{}$!'\"@+`=")
 
 def getConfigValues(configPath, defaults):
     """Get the script's configuration values and return them in a dict
@@ -490,10 +418,8 @@ if __name__ == '__main__':
     # Do the download
     if 'page' in settings:
         # The trailer page URL was passed in on the command line
-        trailerTitle = getTrailerTitle(settings['page'])
         downloadTrailersFromPage(
             settings['page'],
-            trailerTitle,
             settings['list_file'],
             settings['resolution'],
             settings['download_dir'],
@@ -508,7 +434,6 @@ if __name__ == '__main__':
             url = 'http://trailers.apple.com' + trailer['location']
             downloadTrailersFromPage(
                 url,
-                trailer['title'],
                 settings['list_file'],
                 settings['resolution'],
                 settings['download_dir'],
