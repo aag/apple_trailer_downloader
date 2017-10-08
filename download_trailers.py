@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 
 # This is a Python script to download HD trailers from the Apple Trailers
-# website. It uses the "Just Added" JSON endpoint to discover new trailers and
-# keeps track of the ones it has already downloaded so they aren't
-# re-downloaded.
+# website. It uses the same "Just Added" JSON endpoint to discover new trailers
+# that is used on the trailers website and keeps track of the ones it has
+# already downloaded so they aren't re-downloaded.
 #
 # Started on: 10.14.2011
 #
-# Copyright 2011-2014 Adam Goforth
+# Copyright 2011-2017 Adam Goforth
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -22,9 +22,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-# Some imports are declared inside of functions, so other functions in this
-# script can be used in other scripts, without requiring all of
-# the dependencies.
+# Some imports are declared inside of functions, so that this script can be
+# used as a library from other Python scripts, without requiring unnecessary
+# dependencies to be installed.
 import codecs
 import logging
 import os.path
@@ -300,8 +300,9 @@ def getConfigValues(configPath, defaults):
 def getSettings():
     import argparse
 
-    # Don't include list_file in the defaults, so we can tell
-    # if it was in the config file or not.
+    # Don't include list_file in the defaults, because the default value is
+    # dependent on the configured download_dir, which isn't known until the
+    # command line and config file have been parsed.
     scriptDir = os.path.abspath(os.path.dirname(__file__))
     defaults = {
         'download_dir': scriptDir,
@@ -316,9 +317,9 @@ def getSettings():
 
     parser = argparse.ArgumentParser(description=
             'Download movie trailers from the Apple website. With no ' +
-            'arguments, will download all of the trailers in the current RSS ' +
-            'feed. When a trailer page URL is specified, will only download ' +
-            'the single trailer at that URL. Example URL: ' +
+            'arguments, will download all of the trailers in the current ' +
+            '"Just Added" list. When a trailer page URL is specified, will ' +
+            'only download the single trailer at that URL. Example URL: ' +
             'http://trailers.apple.com/trailers/lions_gate/thehungergames/')
 
     parser.add_argument(
@@ -333,7 +334,7 @@ def getSettings():
         '-d, --dir',
         action='store',
         dest='dir',
-        help='The directory where the trailers should be downloaded. ' +
+        help='The directory to which the trailers should be downloaded. ' +
                 'Defaults to the script directory.'
     )
 
@@ -351,7 +352,7 @@ def getSettings():
         action='store',
         dest='resolution',
         help='The preferred video resolution to download. Valid options are ' +
-                '1080, 720, and 480.'
+                '"1080", "720", and "480".'
     )
 
     parser.add_argument(
@@ -366,7 +367,7 @@ def getSettings():
         action='store',
         dest='types',
         help='The types of videos to be downloaded. Valid options are ' +
-                'single_trailer, trailers, and all.'
+                '"single_trailer", "trailers", and "all".'
     )
 
     parser.add_argument(
@@ -374,7 +375,7 @@ def getSettings():
         action='store',
         dest='output',
         help='The level of console output. Valid options are ' +
-                'debug, downloads, and error.'
+                '"debug", "downloads", and "error".'
     )
 
     results = parser.parse_args()
