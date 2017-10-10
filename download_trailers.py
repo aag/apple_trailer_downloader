@@ -13,12 +13,12 @@
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -32,6 +32,7 @@ import shutil
 import socket
 import urllib
 import urllib2
+
 
 #############
 # Functions #
@@ -52,16 +53,17 @@ def get_trailer_file_urls(page_url, res, types):
 
             if should_download_file(types, video_type):
                 url_info = {
-                        'res': res,
-                        'title': title,
-                        'type': video_type,
-                        'url': file_url,
+                    'res': res,
+                    'title': title,
+                    'type': video_type,
+                    'url': file_url,
                 }
                 urls.append(url_info)
         elif should_download_file(types, video_type):
             logging.error('*** No {}p file found for {}'.format(res, video_type))
 
     return urls
+
 
 def map_res_to_apple_size(res):
     res_mapping = {'480': 'sd', '720': 'hd720', '1080': 'hd1080'}
@@ -71,10 +73,12 @@ def map_res_to_apple_size(res):
 
     return res_mapping[res]
 
+
 def convert_src_url_to_file_url(src_url, res):
     src_ending = "_%sp.mov" % res
     file_ending = "_h%sp.mov" % res
     return src_url.replace(src_ending, file_ending)
+
 
 def should_download_file(requested_types, video_type):
     do_download = False
@@ -87,21 +91,23 @@ def should_download_file(requested_types, video_type):
 
     elif requested_types == 'trailers':
         if (video_type.lower().startswith('trailer') or
-            video_type.lower().startswith('teaser') or
-            video_type.lower() == 'first look'):
+                video_type.lower().startswith('teaser') or
+                    video_type.lower() == 'first look'):
             do_download = True
 
     return do_download
 
+
 def get_downloaded_files(dl_list_path):
     """Get the list of downloaded files from the text file"""
     file_list = []
-    if (os.path.exists(dl_list_path)):
+    if os.path.exists(dl_list_path):
         f = codecs.open(dl_list_path, 'r', encoding='utf-8')
         for line in f.xreadlines():
             file_list.append(convert_to_unicode(line.strip()))
         f.close()
     return file_list
+
 
 def write_downloaded_files(file_list, dl_list_path):
     """Write the list of downloaded files to the text file"""
@@ -110,11 +116,13 @@ def write_downloaded_files(file_list, dl_list_path):
     f.writelines(new_list)
     f.close()
 
+
 def record_downloaded_file(filename, dl_list_path):
     """Appends the given filename to the text file of already downloaded files"""
     file_list = get_downloaded_files(dl_list_path)
     file_list.append(filename)
     write_downloaded_files(file_list, dl_list_path)
+
 
 def download_trailer_file(url, destdir, filename):
     """Accepts a URL to a trailer video file and downloads it"""
@@ -128,7 +136,7 @@ def download_trailer_file(url, destdir, filename):
         existing_file_size = os.path.getsize(file_path)
 
     data = None
-    headers = { 'User-Agent' : 'Quick_time/7.6.2' }
+    headers = {'User-Agent': 'Quick_time/7.6.2'}
 
     resume_download = False
     if file_exists and (existing_file_size > 0):
@@ -169,6 +177,7 @@ def download_trailer_file(url, destdir, filename):
         logging.error("*** Network error while downloading file: %s" % msg)
         return
 
+
 def download_trailers_from_page(page_url, dl_list_path, res, destdir, types):
     """Takes a page on the Apple Trailers website and downloads the trailer for the movie on the page"""
     """Example URL: http://trailers.apple.com/trailers/lions_gate/thehungergames/"""
@@ -186,6 +195,7 @@ def download_trailers_from_page(page_url, dl_list_path, res, destdir, types):
         else:
             logging.debug('*** File already downloaded, skipping: ' + trailer_file_name)
 
+
 def get_trailer_filename(film_title, video_type, res):
     """Take video info and convert it to the correct filename.
 
@@ -196,9 +206,10 @@ def get_trailer_filename(film_title, video_type, res):
     trailer_file_name = convert_to_unicode(trailer_file_name)
     return "".join(s for s in trailer_file_name if s not in "\/:*?<>|#%&{}$!'\"@+`=")
 
+
 def get_config_values(config_path, defaults):
     """Get the script's configuration values and return them in a dict
-    
+
     If a config file exists, merge its values with the defaults. If no config
     file exists, just return the defaults.
     """
@@ -225,6 +236,7 @@ def get_config_values(config_path, defaults):
 
     return config_values
 
+
 def get_settings():
     import argparse
 
@@ -244,18 +256,18 @@ def get_settings():
     valid_output_levels = ['debug', 'downloads', 'error']
 
     parser = argparse.ArgumentParser(description=
-            'Download movie trailers from the Apple website. With no ' +
-            'arguments, will download all of the trailers in the current ' +
-            '"Just Added" list. When a trailer page URL is specified, will ' +
-            'only download the single trailer at that URL. Example URL: ' +
-            'http://trailers.apple.com/trailers/lions_gate/thehungergames/')
+                                     'Download movie trailers from the Apple website. With no ' +
+                                     'arguments, will download all of the trailers in the current ' +
+                                     '"Just Added" list. When a trailer page URL is specified, will ' +
+                                     'only download the single trailer at that URL. Example URL: ' +
+                                     'http://trailers.apple.com/trailers/lions_gate/thehungergames/')
 
     parser.add_argument(
         '-c, --config',
         action='store',
         dest='config',
         help='The location of the config file. Defaults to "settings.cfg"' +
-                'in the script directory.'
+             'in the script directory.'
     )
 
     parser.add_argument(
@@ -263,7 +275,7 @@ def get_settings():
         action='store',
         dest='dir',
         help='The directory to which the trailers should be downloaded. ' +
-                'Defaults to the script directory.'
+             'Defaults to the script directory.'
     )
 
     parser.add_argument(
@@ -271,8 +283,8 @@ def get_settings():
         action='store',
         dest='filepath',
         help='The location of the download list file. The names of the ' +
-                'previously downloaded trailers are stored in this file. ' +
-                'Defaults to "download_list.txt" in the download directory.'
+             'previously downloaded trailers are stored in this file. ' +
+             'Defaults to "download_list.txt" in the download directory.'
     )
 
     parser.add_argument(
@@ -280,7 +292,7 @@ def get_settings():
         action='store',
         dest='resolution',
         help='The preferred video resolution to download. Valid options are ' +
-                '"1080", "720", and "480".'
+             '"1080", "720", and "480".'
     )
 
     parser.add_argument(
@@ -295,7 +307,7 @@ def get_settings():
         action='store',
         dest='types',
         help='The types of videos to be downloaded. Valid options are ' +
-                '"single_trailer", "trailers", and "all".'
+             '"single_trailer", "trailers", and "all".'
     )
 
     parser.add_argument(
@@ -303,7 +315,7 @@ def get_settings():
         action='store',
         dest='output',
         help='The level of console output. Valid options are ' +
-                '"debug", "downloads", and "error".'
+             '"debug", "downloads", and "error".'
     )
 
     results = parser.parse_args()
@@ -379,17 +391,19 @@ def get_settings():
 
     return settings
 
+
 def configure_logging(output_level):
     loglevel = 'DEBUG'
-    if (output_level == 'downloads'):
+    if output_level == 'downloads':
         loglevel = 'INFO'
-    elif (output_level == 'error'):
+    elif output_level == 'error':
         loglevel = 'ERROR'
 
     numeric_level = getattr(logging, loglevel, None)
     if not isinstance(numeric_level, int):
         raise ValueError('Invalid log level: %s' % loglevel)
     logging.basicConfig(format='%(message)s', level=loglevel)
+
 
 def convert_to_unicode(obj, encoding='utf-8'):
     if isinstance(obj, basestring):
