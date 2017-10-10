@@ -27,6 +27,9 @@ Some imports are declared inside of functions, so that this script can be
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+# Require using print as a function instead of a keyword
+from __future__ import print_function
+
 import codecs
 import json
 import logging
