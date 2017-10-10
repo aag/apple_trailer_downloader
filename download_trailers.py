@@ -250,8 +250,8 @@ def get_config_values(config_path, defaults):
 
 def get_settings():
     """Validate and return the user's settings as a combination of the default settings,
-    the settings file (if it exists) and the command-line options (if given)."""
-    import argparse
+    the settings file (if it exists) and the command-line options (if given).
+    """
 
     # Don't include list_file in the defaults, because the default value is
     # dependent on the configured download_dir, which isn't known until the
@@ -267,6 +267,71 @@ def get_settings():
     valid_resolutions = ['480', '720', '1080']
     valid_video_types = ['single_trailer', 'trailers', 'all']
     valid_output_levels = ['debug', 'downloads', 'error']
+
+    args = get_command_line_arguments()
+
+    config_path = "{}/settings.cfg".format(script_dir)
+    if 'config_path' in args:
+        config_path = args['config_path']
+
+    try:
+        config = get_config_values(config_path, defaults)
+    except ValueError as ex:
+        print "Configuration error: %s" % ex
+        print 'Exiting...'
+        exit()
+
+    settings = config.copy()
+    settings.update(args)
+
+    settings['download_dir'] = os.path.expanduser(settings['download_dir'])
+    settings['config_path'] = config_path
+
+    if ('list_file' not in args) and ('list_file' not in config):
+        settings['list_file'] = os.path.join(
+            settings['download_dir'],
+            'download_list.txt'
+        )
+
+    settings['list_file'] = os.path.expanduser(settings['list_file'])
+
+    # Validate the settings
+    settings_error = False
+    if settings['resolution'] not in valid_resolutions:
+        res_string = ', '.join(valid_resolutions)
+        print "Configuration error: Invalid resolution. Valid values: %s" % res_string
+        settings_error = True
+
+    if not os.path.exists(settings['download_dir']):
+        print 'Configuration error: The download directory must be a valid path'
+        settings_error = True
+
+    if settings['video_types'] not in valid_video_types:
+        types_string = ', '.join(valid_video_types)
+        print "Configuration error: Invalid video type. Valid values: %s" % types_string
+        settings_error = True
+
+    if settings['output_level'] not in valid_output_levels:
+        output_string = ', '.join(valid_output_levels)
+        print "Configuration error: Invalid output level. Valid values: %s" % output_string
+        settings_error = True
+
+    if not os.path.exists(os.path.dirname(settings['list_file'])):
+        print 'Configuration error: the list file directory must be a valid path'
+        settings_error = True
+
+    if settings_error:
+        print 'Exiting...'
+        exit()
+
+    return settings
+
+
+def get_command_line_arguments():
+    """Return a dictionary containing all of the command-line arguments
+    specified when the script was run.
+    """
+    import argparse
 
     parser = argparse.ArgumentParser(
         description='Download movie trailers from the Apple website. With no arguments, will' +
@@ -348,61 +413,7 @@ def get_settings():
         if value is not None:
             set_args[name] = value
 
-    config_path = args['config_path']
-    if config_path is None:
-        config_path = "%s/settings.cfg" % script_dir
-
-    try:
-        config = get_config_values(config_path, defaults)
-    except ValueError as ex:
-        print "Configuration error: %s" % ex
-        print 'Exiting...'
-        exit()
-
-    settings = config.copy()
-    settings.update(set_args)
-
-    settings['download_dir'] = os.path.expanduser(settings['download_dir'])
-    settings['config_path'] = config_path
-
-    if ('list_file' not in set_args) and ('list_file' not in config):
-        settings['list_file'] = os.path.join(
-            settings['download_dir'],
-            'download_list.txt'
-        )
-
-    settings['list_file'] = os.path.expanduser(settings['list_file'])
-
-    # Validate the settings
-    settings_error = False
-    if settings['resolution'] not in valid_resolutions:
-        res_string = ', '.join(valid_resolutions)
-        print "Configuration error: Invalid resolution. Valid values: %s" % res_string
-        settings_error = True
-
-    if not os.path.exists(settings['download_dir']):
-        print 'Configuration error: The download directory must be a valid path'
-        settings_error = True
-
-    if settings['video_types'] not in valid_video_types:
-        types_string = ', '.join(valid_video_types)
-        print "Configuration error: Invalid video type. Valid values: %s" % types_string
-        settings_error = True
-
-    if settings['output_level'] not in valid_output_levels:
-        output_string = ', '.join(valid_output_levels)
-        print "Configuration error: Invalid output level. Valid values: %s" % output_string
-        settings_error = True
-
-    if not os.path.exists(os.path.dirname(settings['list_file'])):
-        print 'Configuration error: the list file directory must be a valid path'
-        settings_error = True
-
-    if settings_error:
-        print 'Exiting...'
-        exit()
-
-    return settings
+    return set_args
 
 
 def configure_logging(output_level):
