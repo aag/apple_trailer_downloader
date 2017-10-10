@@ -36,104 +36,104 @@ import urllib2
 #############
 # Functions #
 #############
-def getTrailerFileUrls(pageUrl, res, types):
+def get_trailer_file_urls(page_url, res, types):
     urls = []
 
-    filmData = json.load(urllib.urlopen(pageUrl + '/data/page.json'))
-    title = filmData['page']['movie_title']
-    appleSize = mapResToAppleSize(res)
-        
-    for clip in filmData['clips']:
-        videoType = clip['title']
+    film_data = json.load(urllib.urlopen(page_url + '/data/page.json'))
+    title = film_data['page']['movie_title']
+    apple_size = map_res_to_apple_size(res)
 
-        if appleSize in clip['versions']['enus']['sizes']:
-            fileInfo = clip['versions']['enus']['sizes'][appleSize]
-            fileUrl = convertSrcUrlToFileUrl(fileInfo['src'], res)
+    for clip in film_data['clips']:
+        video_type = clip['title']
 
-            if shouldDownloadFile(types, videoType):
-                urlInfo = {
+        if apple_size in clip['versions']['enus']['sizes']:
+            file_info = clip['versions']['enus']['sizes'][apple_size]
+            file_url = convert_src_url_to_file_url(file_info['src'], res)
+
+            if should_download_file(types, video_type):
+                url_info = {
                         'res': res,
                         'title': title,
-                        'type': videoType,
-                        'url': fileUrl,
+                        'type': video_type,
+                        'url': file_url,
                 }
-                urls.append(urlInfo)
-        elif shouldDownloadFile(types, videoType):
-            logging.error('*** No {}p file found for {}'.format(res, videoType))
+                urls.append(url_info)
+        elif should_download_file(types, video_type):
+            logging.error('*** No {}p file found for {}'.format(res, video_type))
 
     return urls
 
-def mapResToAppleSize(res):
-    resMapping = {'480': 'sd', '720': 'hd720', '1080': 'hd1080'}
-    if not res in resMapping:
-        resString = ', '.join(resMapping.keys())
-        raise ValueError("Invalid resolution. Valid values: %s" % resString)
+def map_res_to_apple_size(res):
+    res_mapping = {'480': 'sd', '720': 'hd720', '1080': 'hd1080'}
+    if not res in res_mapping:
+        res_string = ', '.join(res_mapping.keys())
+        raise ValueError("Invalid resolution. Valid values: %s" % res_string)
 
-    return resMapping[res]
+    return res_mapping[res]
 
-def convertSrcUrlToFileUrl(srcUrl, res):
-    srcEnding = "_%sp.mov" % res
-    fileEnding = "_h%sp.mov" % res
-    return srcUrl.replace(srcEnding, fileEnding)
+def convert_src_url_to_file_url(src_url, res):
+    src_ending = "_%sp.mov" % res
+    file_ending = "_h%sp.mov" % res
+    return src_url.replace(src_ending, file_ending)
 
-def shouldDownloadFile(requestedTypes, videoType):
-    doDownload = False
+def should_download_file(requested_types, video_type):
+    do_download = False
 
-    if requestedTypes == 'all':
-        doDownload = True
+    if requested_types == 'all':
+        do_download = True
 
-    elif requestedTypes == 'single_trailer':
-        doDownload = (videoType.lower() == 'trailer')
-    
-    elif requestedTypes == 'trailers':
-        if (videoType.lower().startswith('trailer') or
-            videoType.lower().startswith('teaser') or
-            videoType.lower() == 'first look'):
-            doDownload = True
+    elif requested_types == 'single_trailer':
+        do_download = (video_type.lower() == 'trailer')
 
-    return doDownload
+    elif requested_types == 'trailers':
+        if (video_type.lower().startswith('trailer') or
+            video_type.lower().startswith('teaser') or
+            video_type.lower() == 'first look'):
+            do_download = True
 
-def getDownloadedFiles(dlListPath):
+    return do_download
+
+def get_downloaded_files(dl_list_path):
     """Get the list of downloaded files from the text file"""
-    fileList = []
-    if (os.path.exists(dlListPath)):
-        f = codecs.open(dlListPath, 'r', encoding='utf-8')
+    file_list = []
+    if (os.path.exists(dl_list_path)):
+        f = codecs.open(dl_list_path, 'r', encoding='utf-8')
         for line in f.xreadlines():
-            fileList.append(convertToUnicode(line.strip()))
+            file_list.append(convert_to_unicode(line.strip()))
         f.close()
-    return fileList
+    return file_list
 
-def writeDownloadedFiles(fileList, dlListPath):
+def write_downloaded_files(file_list, dl_list_path):
     """Write the list of downloaded files to the text file"""
-    f = open(dlListPath, 'w')
-    newList = [(filename + '\n').encode('utf-8') for filename in fileList]
-    f.writelines(newList)
+    f = open(dl_list_path, 'w')
+    new_list = [(filename + '\n').encode('utf-8') for filename in file_list]
+    f.writelines(new_list)
     f.close()
 
-def recordDownloadedFile(filename, dlListPath):
+def record_downloaded_file(filename, dl_list_path):
     """Appends the given filename to the text file of already downloaded files"""
-    fileList = getDownloadedFiles(dlListPath)
-    fileList.append(filename)
-    writeDownloadedFiles(fileList, dlListPath)
+    file_list = get_downloaded_files(dl_list_path)
+    file_list.append(filename)
+    write_downloaded_files(file_list, dl_list_path)
 
-def downloadTrailerFile(url, destdir, filename):
+def download_trailer_file(url, destdir, filename):
     """Accepts a URL to a trailer video file and downloads it"""
     """You have to spoof the user agent or the site will deny the request"""
     """Resumes partial downloads and skips fully-downloaded files"""
-    filePath = os.path.join(destdir, filename)
-    fileExists = os.path.exists(filePath)
+    file_path = os.path.join(destdir, filename)
+    file_exists = os.path.exists(file_path)
 
-    existingFileSize = 0
-    if fileExists:
-        existingFileSize = os.path.getsize(filePath)
+    existing_file_size = 0
+    if file_exists:
+        existing_file_size = os.path.getsize(file_path)
 
     data = None
-    headers = { 'User-Agent' : 'QuickTime/7.6.2' }
+    headers = { 'User-Agent' : 'Quick_time/7.6.2' }
 
-    resumeDownload = False
-    if fileExists and (existingFileSize > 0):
-        resumeDownload = True
-        headers['Range'] = 'bytes={}-'.format(existingFileSize)
+    resume_download = False
+    if file_exists and (existing_file_size > 0):
+        resume_download = True
+        headers['Range'] = 'bytes={}-'.format(existing_file_size)
 
     req = urllib2.Request(url, data, headers)
 
@@ -154,49 +154,49 @@ def downloadTrailerFile(url, destdir, filename):
         return
 
     # Buffer 1MB at a time
-    chunkSize = 1024 * 1024
+    chunk_size = 1024 * 1024
 
     try:
-        if resumeDownload:
-            logging.debug("  Resuming file %s" % filePath)
-            with open(filePath, 'ab') as fp:
-                shutil.copyfileobj(f, fp, chunkSize)
+        if resume_download:
+            logging.debug("  Resuming file %s" % file_path)
+            with open(file_path, 'ab') as fp:
+                shutil.copyfileobj(f, fp, chunk_size)
         else:
-            logging.debug("  Saving file to %s" % filePath)
-            with open(filePath, 'wb') as fp:
-                shutil.copyfileobj(f, fp, chunkSize)
+            logging.debug("  Saving file to %s" % file_path)
+            with open(file_path, 'wb') as fp:
+                shutil.copyfileobj(f, fp, chunk_size)
     except socket.error, msg:
         logging.error("*** Network error while downloading file: %s" % msg)
         return
 
-def downloadTrailersFromPage(pageUrl, dlListPath, res, destdir, types):
+def download_trailers_from_page(page_url, dl_list_path, res, destdir, types):
     """Takes a page on the Apple Trailers website and downloads the trailer for the movie on the page"""
     """Example URL: http://trailers.apple.com/trailers/lions_gate/thehungergames/"""
 
-    logging.debug('Checking for files at ' + pageUrl)
-    trailerUrls = getTrailerFileUrls(pageUrl, res, types)
-    downloadedFiles = getDownloadedFiles(dlListPath)
+    logging.debug('Checking for files at ' + page_url)
+    trailer_urls = get_trailer_file_urls(page_url, res, types)
+    downloaded_files = get_downloaded_files(dl_list_path)
 
-    for trailerUrl in trailerUrls:
-        trailerFileName = getTrailerFilename(trailerUrl['title'], trailerUrl['type'], trailerUrl['res'])
-        if not trailerFileName in downloadedFiles:
-            logging.info('Downloading ' + trailerUrl['type'] + ': ' + trailerFileName)
-            downloadTrailerFile(trailerUrl['url'], destdir, trailerFileName)
-            recordDownloadedFile(trailerFileName, dlListPath)
+    for trailer_url in trailer_urls:
+        trailer_file_name = get_trailer_filename(trailer_url['title'], trailer_url['type'], trailer_url['res'])
+        if not trailer_file_name in downloaded_files:
+            logging.info('Downloading ' + trailer_url['type'] + ': ' + trailer_file_name)
+            download_trailer_file(trailer_url['url'], destdir, trailer_file_name)
+            record_downloaded_file(trailer_file_name, dl_list_path)
         else:
-            logging.debug('*** File already downloaded, skipping: ' + trailerFileName)
+            logging.debug('*** File already downloaded, skipping: ' + trailer_file_name)
 
-def getTrailerFilename(filmTitle, videoType, res):
+def get_trailer_filename(film_title, video_type, res):
     """Take video info and convert it to the correct filename.
 
     In addition to stripping leading and trailing whitespace from the title
     and converting to unicode, this function also removes characters that
     should not be used in filenames on various operating systems."""
-    trailerFileName = filmTitle.strip() + '.' + videoType + '.' + res + 'p.mov'
-    trailerFileName = convertToUnicode(trailerFileName)
-    return "".join(s for s in trailerFileName if s not in "\/:*?<>|#%&{}$!'\"@+`=")
+    trailer_file_name = film_title.strip() + '.' + video_type + '.' + res + 'p.mov'
+    trailer_file_name = convert_to_unicode(trailer_file_name)
+    return "".join(s for s in trailer_file_name if s not in "\/:*?<>|#%&{}$!'\"@+`=")
 
-def getConfigValues(configPath, defaults):
+def get_config_values(config_path, defaults):
     """Get the script's configuration values and return them in a dict
     
     If a config file exists, merge its values with the defaults. If no config
@@ -205,43 +205,43 @@ def getConfigValues(configPath, defaults):
     from ConfigParser import SafeConfigParser
 
     config = SafeConfigParser(defaults)
-    configValues = config.defaults()
+    config_values = config.defaults()
 
-    configPaths = [
-        configPath,
+    config_paths = [
+        config_path,
         os.path.join(os.path.expanduser('~'), '.trailers.cfg'),
     ]
 
-    configFileFound = False
-    for path in configPaths:
+    config_file_found = False
+    for path in config_paths:
         if os.path.exists(path):
-            configFileFound = True
+            config_file_found = True
             config.read(path)
-            configValues = config.defaults()
+            config_values = config.defaults()
             break
 
-    if not configFileFound:
+    if not config_file_found:
         print 'Config file not found.  Using default values.'
 
-    return configValues
+    return config_values
 
-def getSettings():
+def get_settings():
     import argparse
 
     # Don't include list_file in the defaults, because the default value is
     # dependent on the configured download_dir, which isn't known until the
     # command line and config file have been parsed.
-    scriptDir = os.path.abspath(os.path.dirname(__file__))
+    script_dir = os.path.abspath(os.path.dirname(__file__))
     defaults = {
-        'download_dir': scriptDir,
+        'download_dir': script_dir,
         'resolution': '720',
         'video_types': 'single_trailer',
         'output_level': 'debug',
     }
 
-    validResolutions = ['480', '720', '1080']
-    validVideoTypes = ['single_trailer', 'trailers', 'all']
-    validOutputLevels = ['debug', 'downloads', 'error']
+    valid_resolutions = ['480', '720', '1080']
+    valid_video_types = ['single_trailer', 'trailers', 'all']
+    valid_output_levels = ['debug', 'downloads', 'error']
 
     parser = argparse.ArgumentParser(description=
             'Download movie trailers from the Apple website. With no ' +
@@ -318,29 +318,29 @@ def getSettings():
     }
 
     # Remove all pairs that were not set on the command line.
-    setArgs = {}
+    set_args = {}
     for name, value in args.iteritems():
         if value is not None:
-            setArgs[name] = value
+            set_args[name] = value
 
-    configPath = args['config_path']
-    if configPath is None:
-        configPath = "%s/settings.cfg" % scriptDir
+    config_path = args['config_path']
+    if config_path is None:
+        config_path = "%s/settings.cfg" % script_dir
 
     try:
-        config = getConfigValues(configPath, defaults)
+        config = get_config_values(config_path, defaults)
     except ValueError as e:
         print "Configuration error: %s" % e
         print 'Exiting...'
         exit()
 
     settings = config.copy()
-    settings.update(setArgs)
+    settings.update(set_args)
 
     settings['download_dir'] = os.path.expanduser(settings['download_dir'])
-    settings['config_path'] = configPath
+    settings['config_path'] = config_path
 
-    if ('list_file' not in setArgs) and ('list_file' not in config):
+    if ('list_file' not in set_args) and ('list_file' not in config):
         settings['list_file'] = os.path.join(
             settings['download_dir'],
             'download_list.txt'
@@ -349,37 +349,37 @@ def getSettings():
     settings['list_file'] = os.path.expanduser(settings['list_file'])
 
     # Validate the settings
-    settingsError = False
-    if settings['resolution'] not in validResolutions:
-        resString = ', '.join(validResolutions)
-        print "Configuration error: Invalid resolution. Valid values: %s" % resString
-        settingsError = True
+    settings_error = False
+    if settings['resolution'] not in valid_resolutions:
+        res_string = ', '.join(valid_resolutions)
+        print "Configuration error: Invalid resolution. Valid values: %s" % res_string
+        settings_error = True
 
     if not os.path.exists(settings['download_dir']):
         print 'Configuration error: The download directory must be a valid path'
-        settingsError = True
+        settings_error = True
 
-    if settings['video_types'] not in validVideoTypes:
-        typesString = ', '.join(validVideoTypes)
-        print "Configuration error: Invalid video type. Valid values: %s" % typesString
-        settingsError = True
+    if settings['video_types'] not in valid_video_types:
+        types_string = ', '.join(valid_video_types)
+        print "Configuration error: Invalid video type. Valid values: %s" % types_string
+        settings_error = True
 
-    if settings['output_level'] not in validOutputLevels:
-        outputString = ', '.join(validOutputLevels)
-        print "Configuration error: Invalid output level. Valid values: %s" % outputString
-        settingsError = True
+    if settings['output_level'] not in valid_output_levels:
+        output_string = ', '.join(valid_output_levels)
+        print "Configuration error: Invalid output level. Valid values: %s" % output_string
+        settings_error = True
 
     if not os.path.exists(os.path.dirname(settings['list_file'])):
         print 'Configuration error: the list file directory must be a valid path'
-        settingsError = True
+        settings_error = True
 
-    if settingsError:
+    if settings_error:
         print 'Exiting...'
         exit()
 
     return settings
 
-def configureLogging(output_level):
+def configure_logging(output_level):
     loglevel = 'DEBUG'
     if (output_level == 'downloads'):
         loglevel = 'INFO'
@@ -391,7 +391,7 @@ def configureLogging(output_level):
         raise ValueError('Invalid log level: %s' % loglevel)
     logging.basicConfig(format='%(message)s', level=loglevel)
 
-def convertToUnicode(obj, encoding='utf-8'):
+def convert_to_unicode(obj, encoding='utf-8'):
     if isinstance(obj, basestring):
         if not isinstance(obj, unicode):
             obj = unicode(obj, encoding)
@@ -404,8 +404,8 @@ def convertToUnicode(obj, encoding='utf-8'):
 if __name__ == '__main__':
     import json
 
-    settings = getSettings()
-    configureLogging(settings['output_level'])
+    settings = get_settings()
+    configure_logging(settings['output_level'])
 
     logging.debug("Using configuration values:")
     logging.debug("Loaded configuration from %s" % settings['config_path'])
@@ -414,11 +414,11 @@ if __name__ == '__main__':
             logging.debug("    {}: {}".format(name, settings[name]))
 
     logging.debug("")
-    
+
     # Do the download
     if 'page' in settings:
         # The trailer page URL was passed in on the command line
-        downloadTrailersFromPage(
+        download_trailers_from_page(
             settings['page'],
             settings['list_file'],
             settings['resolution'],
@@ -428,11 +428,11 @@ if __name__ == '__main__':
 
     else:
         # Use the "Just Added" JSON file
-        newestTrailers = json.load(urllib.urlopen('http://trailers.apple.com/trailers/home/feeds/just_added.json'))
-    
-        for trailer in newestTrailers:
+        newest_trailers = json.load(urllib.urlopen('http://trailers.apple.com/trailers/home/feeds/just_added.json'))
+
+        for trailer in newest_trailers:
             url = 'http://trailers.apple.com' + trailer['location']
-            downloadTrailersFromPage(
+            download_trailers_from_page(
                 url,
                 settings['list_file'],
                 settings['resolution'],
