@@ -243,7 +243,7 @@ def get_config_values(config_path, defaults):
             break
 
     if not config_file_found:
-        print 'Config file not found.  Using default values.'
+        print('Config file not found.  Using default values.')
 
     return config_values
 
@@ -277,8 +277,8 @@ def get_settings():
     try:
         config = get_config_values(config_path, defaults)
     except ValueError as ex:
-        print "Configuration error: %s" % ex
-        print 'Exiting...'
+        print("Configuration error: %s" % ex)
+        print('Exiting...')
         exit()
 
     settings = config.copy()
@@ -299,29 +299,29 @@ def get_settings():
     settings_error = False
     if settings['resolution'] not in valid_resolutions:
         res_string = ', '.join(valid_resolutions)
-        print "Configuration error: Invalid resolution. Valid values: %s" % res_string
+        print("Configuration error: Invalid resolution. Valid values: %s" % res_string)
         settings_error = True
 
     if not os.path.exists(settings['download_dir']):
-        print 'Configuration error: The download directory must be a valid path'
+        print('Configuration error: The download directory must be a valid path')
         settings_error = True
 
     if settings['video_types'] not in valid_video_types:
         types_string = ', '.join(valid_video_types)
-        print "Configuration error: Invalid video type. Valid values: %s" % types_string
+        print("Configuration error: Invalid video type. Valid values: %s" % types_string)
         settings_error = True
 
     if settings['output_level'] not in valid_output_levels:
         output_string = ', '.join(valid_output_levels)
-        print "Configuration error: Invalid output level. Valid values: %s" % output_string
+        print("Configuration error: Invalid output level. Valid values: %s" % output_string)
         settings_error = True
 
     if not os.path.exists(os.path.dirname(settings['list_file'])):
-        print 'Configuration error: the list file directory must be a valid path'
+        print('Configuration error: the list file directory must be a valid path')
         settings_error = True
 
     if settings_error:
-        print 'Exiting...'
+        print('Exiting...')
         exit()
 
     return settings
