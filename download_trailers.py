@@ -164,9 +164,9 @@ def download_trailer_file(url, destdir, filename):
         elif ex.code == 404:
             logging.error("*** Error downloading file: file not found")
             return
-        else:
-            logging.error("*** Error downloading file")
-            return
+
+        logging.error("*** Error downloading file")
+        return
     except urllib2.URLError as ex:
         logging.error("*** Error downloading file")
         return
