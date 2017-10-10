@@ -1,5 +1,5 @@
-Apple Trailers Downloader
-=========================
+# Apple Trailers Downloader [![Build Status](https://travis-ci.org/aag/apple_trailer_downloader.svg?branch=master)](https://travis-ci.org/aag/apple_trailer_downloader) [![License](https://img.shields.io/badge/License-GPLv3-blue.svg)](COPYING)
+
 This is a Python script to download HD trailers from the Apple Trailers website.
 It uses the "Just Added" JSON file that is also used by the web interface to
 find new trailers, and keeps track of the ones it has already downloaded so
