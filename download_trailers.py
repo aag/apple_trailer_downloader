@@ -1,10 +1,15 @@
 #!/usr/bin/env python
 
-# This is a Python script to download HD trailers from the Apple Trailers
-# website. It uses the same "Just Added" JSON endpoint to discover new trailers
-# that is used on the trailers website and keeps track of the ones it has
-# already downloaded so they aren't re-downloaded.
-#
+"""This is a Python script to download HD trailers from the Apple Trailers
+website. It uses the same "Just Added" JSON endpoint to discover new trailers
+that is used on the trailers website and keeps track of the ones it has
+already downloaded so they aren't re-downloaded.
+
+Some imports are declared inside of functions, so that this script can be
+# used as a library from other Python scripts, without requiring unnecessary
+# dependencies to be installed.
+"""
+
 # Started on: 10.14.2011
 #
 # Copyright 2011-2017 Adam Goforth
@@ -22,9 +27,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-# Some imports are declared inside of functions, so that this script can be
-# used as a library from other Python scripts, without requiring unnecessary
-# dependencies to be installed.
 import codecs
 import json
 import logging
