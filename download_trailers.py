@@ -177,15 +177,16 @@ def download_trailer_file(url, destdir, filename):
 
 
 def download_trailers_from_page(page_url, dl_list_path, res, destdir, types):
-    """Takes a page on the Apple Trailers website and downloads the trailer for the movie on the page
-    Example URL: http://trailers.apple.com/trailers/lions_gate/thehungergames/"""
+    """Takes a page on the Apple Trailers website and downloads the trailer for the movie on
+    the page. Example URL: http://trailers.apple.com/trailers/lions_gate/thehungergames/"""
 
     logging.debug('Checking for files at ' + page_url)
     trailer_urls = get_trailer_file_urls(page_url, res, types)
     downloaded_files = get_downloaded_files(dl_list_path)
 
     for trailer_url in trailer_urls:
-        trailer_file_name = get_trailer_filename(trailer_url['title'], trailer_url['type'], trailer_url['res'])
+        trailer_file_name = get_trailer_filename(trailer_url['title'], trailer_url['type'],
+                                                 trailer_url['res'])
         if trailer_file_name not in downloaded_files:
             logging.info('Downloading ' + trailer_url['type'] + ': ' + trailer_file_name)
             download_trailer_file(trailer_url['url'], destdir, trailer_file_name)
@@ -253,12 +254,12 @@ def get_settings():
     valid_video_types = ['single_trailer', 'trailers', 'all']
     valid_output_levels = ['debug', 'downloads', 'error']
 
-    parser = argparse.ArgumentParser(description=
-                                     'Download movie trailers from the Apple website. With no ' +
-                                     'arguments, will download all of the trailers in the current ' +
-                                     '"Just Added" list. When a trailer page URL is specified, will ' +
-                                     'only download the single trailer at that URL. Example URL: ' +
-                                     'http://trailers.apple.com/trailers/lions_gate/thehungergames/')
+    parser = argparse.ArgumentParser(
+        description='Download movie trailers from the Apple website. With no arguments, will' +
+        'download all of the trailers in the current "Just Added" list. When a trailer page ' +
+        'URL is specified, will only download the single trailer at that URL. Example URL: ' +
+        'http://trailers.apple.com/trailers/lions_gate/thehungergames/'
+    )
 
     parser.add_argument(
         '-c, --config',
@@ -435,7 +436,9 @@ def main():
 
     else:
         # Use the "Just Added" JSON file
-        newest_trailers = json.load(urllib.urlopen('http://trailers.apple.com/trailers/home/feeds/just_added.json'))
+        newest_trailers = json.load(
+            urllib.urlopen('http://trailers.apple.com/trailers/home/feeds/just_added.json')
+        )
 
         for trailer in newest_trailers:
             url = 'http://trailers.apple.com' + trailer['location']
