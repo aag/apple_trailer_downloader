@@ -26,6 +26,7 @@
 # used as a library from other Python scripts, without requiring unnecessary
 # dependencies to be installed.
 import codecs
+import json
 import logging
 import os.path
 import shutil
@@ -34,9 +35,6 @@ import urllib
 import urllib2
 
 
-#############
-# Functions #
-#############
 def get_trailer_file_urls(page_url, res, types):
     urls = []
 
@@ -412,12 +410,7 @@ def convert_to_unicode(obj, encoding='utf-8'):
     return obj
 
 
-#############
-# Main Prog #
-#############
-if __name__ == '__main__':
-    import json
-
+def main():
     settings = get_settings()
     configure_logging(settings['output_level'])
 
@@ -453,3 +446,7 @@ if __name__ == '__main__':
                 settings['download_dir'],
                 settings['video_types']
             )
+
+
+if __name__ == '__main__':
+    main()
