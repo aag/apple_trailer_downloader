@@ -100,19 +100,19 @@ def get_downloaded_files(dl_list_path):
     """Get the list of downloaded files from the text file"""
     file_list = []
     if os.path.exists(dl_list_path):
-        f = codecs.open(dl_list_path, 'r', encoding='utf-8')
-        for line in f.xreadlines():
+        utf8_file = codecs.open(dl_list_path, 'r', encoding='utf-8')
+        for line in utf8_file.xreadlines():
             file_list.append(convert_to_unicode(line.strip()))
-        f.close()
+            utf8_file.close()
     return file_list
 
 
 def write_downloaded_files(file_list, dl_list_path):
     """Write the list of downloaded files to the text file"""
-    f = open(dl_list_path, 'w')
+    downloads_file = open(dl_list_path, 'w')
     new_list = [(filename + '\n').encode('utf-8') for filename in file_list]
-    f.writelines(new_list)
-    f.close()
+    downloads_file.writelines(new_list)
+    downloads_file.close()
 
 
 def record_downloaded_file(filename, dl_list_path):
@@ -144,18 +144,18 @@ def download_trailer_file(url, destdir, filename):
     req = urllib2.Request(url, data, headers)
 
     try:
-        f = urllib2.urlopen(req)
-    except urllib2.HTTPError as e:
-        if e.code == 416:
+        server_file_handle = urllib2.urlopen(req)
+    except urllib2.HTTPError as ex:
+        if ex.code == 416:
             logging.debug("*** File already downloaded, skipping")
             return
-        elif e.code == 404:
+        elif ex.code == 404:
             logging.error("*** Error downloading file: file not found")
             return
         else:
             logging.error("*** Error downloading file")
             return
-    except urllib2.URLError as e:
+    except urllib2.URLError as ex:
         logging.error("*** Error downloading file")
         return
 
@@ -165,12 +165,12 @@ def download_trailer_file(url, destdir, filename):
     try:
         if resume_download:
             logging.debug("  Resuming file %s" % file_path)
-            with open(file_path, 'ab') as fp:
-                shutil.copyfileobj(f, fp, chunk_size)
+            with open(file_path, 'ab') as local_file_handle:
+                shutil.copyfileobj(server_file_handle, local_file_handle, chunk_size)
         else:
             logging.debug("  Saving file to %s" % file_path)
-            with open(file_path, 'wb') as fp:
-                shutil.copyfileobj(f, fp, chunk_size)
+            with open(file_path, 'wb') as local_file_handle:
+                shutil.copyfileobj(server_file_handle, local_file_handle, chunk_size)
     except socket.error, msg:
         logging.error("*** Network error while downloading file: %s" % msg)
         return
@@ -340,8 +340,8 @@ def get_settings():
 
     try:
         config = get_config_values(config_path, defaults)
-    except ValueError as e:
-        print "Configuration error: %s" % e
+    except ValueError as ex:
+        print "Configuration error: %s" % ex
         print 'Exiting...'
         exit()
 
