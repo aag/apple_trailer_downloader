@@ -58,7 +58,7 @@ def get_trailer_file_urls(page_url, res, types):
                 }
                 urls.append(url_info)
         elif should_download_file(types, video_type):
-            logging.error('*** No {}p file found for {}'.format(res, video_type))
+            logging.error('*** No %sp file found for %s', res, video_type)
 
     return urls
 
@@ -103,7 +103,7 @@ def get_downloaded_files(dl_list_path):
         utf8_file = codecs.open(dl_list_path, 'r', encoding='utf-8')
         for line in utf8_file.xreadlines():
             file_list.append(convert_to_unicode(line.strip()))
-            utf8_file.close()
+        utf8_file.close()
     return file_list
 
 
@@ -164,15 +164,15 @@ def download_trailer_file(url, destdir, filename):
 
     try:
         if resume_download:
-            logging.debug("  Resuming file %s" % file_path)
+            logging.debug("  Resuming file %s", file_path)
             with open(file_path, 'ab') as local_file_handle:
                 shutil.copyfileobj(server_file_handle, local_file_handle, chunk_size)
         else:
-            logging.debug("  Saving file to %s" % file_path)
+            logging.debug("  Saving file to %s", file_path)
             with open(file_path, 'wb') as local_file_handle:
                 shutil.copyfileobj(server_file_handle, local_file_handle, chunk_size)
     except socket.error, msg:
-        logging.error("*** Network error while downloading file: %s" % msg)
+        logging.error("*** Network error while downloading file: %s", msg)
         return
 
 
@@ -416,10 +416,10 @@ def main():
     configure_logging(settings['output_level'])
 
     logging.debug("Using configuration values:")
-    logging.debug("Loaded configuration from %s" % settings['config_path'])
+    logging.debug("Loaded configuration from %s", settings['config_path'])
     for name in sorted(settings):
         if name != 'config_path':
-            logging.debug("    {}: {}".format(name, settings[name]))
+            logging.debug("    %s: %s", name, settings[name])
 
     logging.debug("")
 
