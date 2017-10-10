@@ -239,9 +239,15 @@ def get_config_values(config_path, defaults):
     If a config file exists, merge its values with the defaults. If no config
     file exists, just return the defaults.
     """
-    from ConfigParser import SafeConfigParser
 
-    config = SafeConfigParser(defaults)
+    try:
+        # For Python 3.0 and later
+        from configparser import ConfigParser
+    except ImportError:
+        # Fall back to Python 2's naming
+        from ConfigParser import SafeConfigParser as ConfigParser
+
+    config = ConfigParser(defaults)
     config_values = config.defaults()
 
     config_paths = [
