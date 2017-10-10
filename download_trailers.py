@@ -183,8 +183,8 @@ def download_trailer_file(url, destdir, filename):
             logging.debug("  Saving file to %s", file_path)
             with open(file_path, 'wb') as local_file_handle:
                 shutil.copyfileobj(server_file_handle, local_file_handle, chunk_size)
-    except socket.error, msg:
-        logging.error("*** Network error while downloading file: %s", msg)
+    except socket.error as ex:
+        logging.error("*** Network error while downloading file: %s", ex)
         return
 
 
