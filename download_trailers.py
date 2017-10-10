@@ -38,6 +38,9 @@ import urllib2
 
 
 def get_trailer_file_urls(page_url, res, types):
+    """Get all trailer file URLs from the given movie page in the given
+    resolution and having the given trailer types.
+    """
     urls = []
 
     film_data = json.load(urllib.urlopen(page_url + '/data/page.json'))
@@ -66,6 +69,8 @@ def get_trailer_file_urls(page_url, res, types):
 
 
 def map_res_to_apple_size(res):
+    """Map a video resolution to the equivalent value used in the data JSON file.
+    """
     res_mapping = {'480': 'sd', '720': 'hd720', '1080': 'hd1080'}
     if res not in res_mapping:
         res_string = ', '.join(res_mapping.keys())
@@ -75,12 +80,17 @@ def map_res_to_apple_size(res):
 
 
 def convert_src_url_to_file_url(src_url, res):
+    """Convert a video source URL as specified in the data JSON to the actual
+    URL used on the server."""
     src_ending = "_%sp.mov" % res
     file_ending = "_h%sp.mov" % res
     return src_url.replace(src_ending, file_ending)
 
 
 def should_download_file(requested_types, video_type):
+    """Given the requested video types and the specified video type of a particular file,
+    return true if the video file should be downloaded.
+    """
     do_download = False
 
     if requested_types == 'all':
@@ -239,6 +249,8 @@ def get_config_values(config_path, defaults):
 
 
 def get_settings():
+    """Validate and return the user's settings as a combination of the default settings,
+    the settings file (if it exists) and the command-line options (if given)."""
     import argparse
 
     # Don't include list_file in the defaults, because the default value is
@@ -394,6 +406,9 @@ def get_settings():
 
 
 def configure_logging(output_level):
+    """Configure the logger to print messages with at least the level of the given
+    configuration value.
+    """
     loglevel = 'DEBUG'
     if output_level == 'downloads':
         loglevel = 'INFO'
@@ -407,6 +422,8 @@ def configure_logging(output_level):
 
 
 def convert_to_unicode(obj, encoding='utf-8'):
+    """Convert a string to a unicode string.
+    """
     if isinstance(obj, basestring):
         if not isinstance(obj, unicode):
             obj = unicode(obj, encoding)
@@ -414,6 +431,8 @@ def convert_to_unicode(obj, encoding='utf-8'):
 
 
 def main():
+    """The main script function.
+    """
     settings = get_settings()
     configure_logging(settings['output_level'])
 
