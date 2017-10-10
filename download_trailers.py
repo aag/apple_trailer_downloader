@@ -65,7 +65,7 @@ def get_trailer_file_urls(page_url, res, types):
 
 def map_res_to_apple_size(res):
     res_mapping = {'480': 'sd', '720': 'hd720', '1080': 'hd1080'}
-    if not res in res_mapping:
+    if res not in res_mapping:
         res_string = ', '.join(res_mapping.keys())
         raise ValueError("Invalid resolution. Valid values: %s" % res_string)
 
@@ -186,7 +186,7 @@ def download_trailers_from_page(page_url, dl_list_path, res, destdir, types):
 
     for trailer_url in trailer_urls:
         trailer_file_name = get_trailer_filename(trailer_url['title'], trailer_url['type'], trailer_url['res'])
-        if not trailer_file_name in downloaded_files:
+        if trailer_file_name not in downloaded_files:
             logging.info('Downloading ' + trailer_url['type'] + ': ' + trailer_file_name)
             download_trailer_file(trailer_url['url'], destdir, trailer_file_name)
             record_downloaded_file(trailer_file_name, dl_list_path)
