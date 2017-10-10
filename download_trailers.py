@@ -125,9 +125,9 @@ def record_downloaded_file(filename, dl_list_path):
 
 
 def download_trailer_file(url, destdir, filename):
-    """Accepts a URL to a trailer video file and downloads it"""
-    """You have to spoof the user agent or the site will deny the request"""
-    """Resumes partial downloads and skips fully-downloaded files"""
+    """Accepts a URL to a trailer video file and downloads it
+    You have to spoof the user agent or the site will deny the request
+    Resumes partial downloads and skips fully-downloaded files"""
     file_path = os.path.join(destdir, filename)
     file_exists = os.path.exists(file_path)
 
@@ -179,8 +179,8 @@ def download_trailer_file(url, destdir, filename):
 
 
 def download_trailers_from_page(page_url, dl_list_path, res, destdir, types):
-    """Takes a page on the Apple Trailers website and downloads the trailer for the movie on the page"""
-    """Example URL: http://trailers.apple.com/trailers/lions_gate/thehungergames/"""
+    """Takes a page on the Apple Trailers website and downloads the trailer for the movie on the page
+    Example URL: http://trailers.apple.com/trailers/lions_gate/thehungergames/"""
 
     logging.debug('Checking for files at ' + page_url)
     trailer_urls = get_trailer_file_urls(page_url, res, types)
@@ -204,7 +204,7 @@ def get_trailer_filename(film_title, video_type, res):
     should not be used in filenames on various operating systems."""
     trailer_file_name = film_title.strip() + '.' + video_type + '.' + res + 'p.mov'
     trailer_file_name = convert_to_unicode(trailer_file_name)
-    return "".join(s for s in trailer_file_name if s not in "\/:*?<>|#%&{}$!'\"@+`=")
+    return "".join(s for s in trailer_file_name if s not in r'\/:*?<>|#%&{}$!\'"@+`=')
 
 
 def get_config_values(config_path, defaults):
