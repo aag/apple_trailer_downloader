@@ -92,7 +92,7 @@ def should_download_file(requested_types, video_type):
     elif requested_types == 'trailers':
         if (video_type.lower().startswith('trailer') or
                 video_type.lower().startswith('teaser') or
-                    video_type.lower() == 'first look'):
+                video_type.lower() == 'first look'):
             do_download = True
 
     return do_download
@@ -267,7 +267,7 @@ def get_settings():
         action='store',
         dest='config',
         help='The location of the config file. Defaults to "settings.cfg"' +
-             'in the script directory.'
+        'in the script directory.'
     )
 
     parser.add_argument(
@@ -275,7 +275,7 @@ def get_settings():
         action='store',
         dest='dir',
         help='The directory to which the trailers should be downloaded. ' +
-             'Defaults to the script directory.'
+        'Defaults to the script directory.'
     )
 
     parser.add_argument(
@@ -283,8 +283,8 @@ def get_settings():
         action='store',
         dest='filepath',
         help='The location of the download list file. The names of the ' +
-             'previously downloaded trailers are stored in this file. ' +
-             'Defaults to "download_list.txt" in the download directory.'
+        'previously downloaded trailers are stored in this file. ' +
+        'Defaults to "download_list.txt" in the download directory.'
     )
 
     parser.add_argument(
@@ -292,7 +292,7 @@ def get_settings():
         action='store',
         dest='resolution',
         help='The preferred video resolution to download. Valid options are ' +
-             '"1080", "720", and "480".'
+        '"1080", "720", and "480".'
     )
 
     parser.add_argument(
@@ -307,7 +307,7 @@ def get_settings():
         action='store',
         dest='types',
         help='The types of videos to be downloaded. Valid options are ' +
-             '"single_trailer", "trailers", and "all".'
+        '"single_trailer", "trailers", and "all".'
     )
 
     parser.add_argument(
@@ -315,7 +315,7 @@ def get_settings():
         action='store',
         dest='output',
         help='The level of console output. Valid options are ' +
-             '"debug", "downloads", and "error".'
+        '"debug", "downloads", and "error".'
     )
 
     results = parser.parse_args()
