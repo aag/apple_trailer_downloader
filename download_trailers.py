@@ -37,7 +37,19 @@ import os.path
 import shutil
 import socket
 import urllib
-import urllib2
+
+try:
+    # For Python 3.0 and later
+    from urllib.request import urlopen
+    from urllib.request import Request
+    from urllib.error import HTTPError
+    from urllib.error import URLError
+except ImportError:
+    # Fall back to Python 2's urllib2
+    from urllib2 import urlopen
+    from urllib2 import Request
+    from urllib2 import HTTPError
+    from urllib2 import URLError
 
 
 def get_trailer_file_urls(page_url, res, types):
@@ -156,11 +168,11 @@ def download_trailer_file(url, destdir, filename):
         resume_download = True
         headers['Range'] = 'bytes={}-'.format(existing_file_size)
 
-    req = urllib2.Request(url, data, headers)
+    req = Request(url, data, headers)
 
     try:
-        server_file_handle = urllib2.urlopen(req)
-    except urllib2.HTTPError as ex:
+        server_file_handle = urlopen(req)
+    except HTTPError as ex:
         if ex.code == 416:
             logging.debug("*** File already downloaded, skipping")
             return
@@ -170,7 +182,7 @@ def download_trailer_file(url, destdir, filename):
 
         logging.error("*** Error downloading file")
         return
-    except urllib2.URLError as ex:
+    except URLError as ex:
         logging.error("*** Error downloading file")
         return
 
