@@ -31,12 +31,13 @@ Some imports are declared inside of functions, so that this script can be
 from __future__ import print_function
 
 import codecs
+import io
 import json
 import logging
 import os.path
 import shutil
 import socket
-import urllib
+import sys
 
 try:
     # For Python 3.0 and later
@@ -58,7 +59,7 @@ def get_trailer_file_urls(page_url, res, types):
     """
     urls = []
 
-    film_data = json.load(urllib.urlopen(page_url + '/data/page.json'))
+    film_data = json.load(urlopen(page_url + '/data/page.json'))
     title = film_data['page']['movie_title']
     apple_size = map_res_to_apple_size(res)
 
@@ -127,17 +128,17 @@ def get_downloaded_files(dl_list_path):
     """Get the list of downloaded files from the text file"""
     file_list = []
     if os.path.exists(dl_list_path):
-        utf8_file = codecs.open(dl_list_path, 'r', encoding='utf-8')
-        for line in utf8_file.xreadlines():
-            file_list.append(convert_to_unicode(line.strip()))
+        utf8_file = io.open(dl_list_path, mode='r', encoding='utf-8')
+        for line in utf8_file:
+            file_list.append(line.strip())
         utf8_file.close()
     return file_list
 
 
 def write_downloaded_files(file_list, dl_list_path):
     """Write the list of downloaded files to the text file"""
-    downloads_file = open(dl_list_path, 'w')
-    new_list = [(filename + '\n').encode('utf-8') for filename in file_list]
+    new_list = [convert_to_unicode(filename + '\n') for filename in file_list]
+    downloads_file = io.open(dl_list_path, mode='w', encoding='utf-8')
     downloads_file.writelines(new_list)
     downloads_file.close()
 
@@ -430,9 +431,9 @@ def get_command_line_arguments():
 
     # Remove all pairs that were not set on the command line.
     set_args = {}
-    for name, value in args.iteritems():
-        if value is not None:
-            set_args[name] = value
+    for name in args:
+        if args[name] is not None:
+            set_args[name] = args[name]
 
     return set_args
 
@@ -453,13 +454,14 @@ def configure_logging(output_level):
     logging.basicConfig(format='%(message)s', level=loglevel)
 
 
-def convert_to_unicode(obj, encoding='utf-8'):
-    """Convert a string to a unicode string.
+def convert_to_unicode(value):
+    """In Python 2, convert the given string to a unicode string. In Python 3, just return the
+    string, because it always has to be a unicode string.
     """
-    if isinstance(obj, basestring):
-        if not isinstance(obj, unicode):
-            obj = unicode(obj, encoding)
-    return obj
+    if sys.version_info < (3,):
+        return codecs.unicode_escape_decode(value)[0]
+
+    return value
 
 
 def main():
@@ -490,7 +492,7 @@ def main():
     else:
         # Use the "Just Added" JSON file
         newest_trailers = json.load(
-            urllib.urlopen('http://trailers.apple.com/trailers/home/feeds/just_added.json')
+            urlopen('http://trailers.apple.com/trailers/home/feeds/just_added.json')
         )
 
         for trailer in newest_trailers:
