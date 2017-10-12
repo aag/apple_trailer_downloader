@@ -59,7 +59,7 @@ def get_trailer_file_urls(page_url, res, types):
     """
     urls = []
 
-    film_data = json.load(urlopen(page_url + '/data/page.json'))
+    film_data = load_json_from_url(page_url + '/data/page.json')
     title = film_data['page']['movie_title']
     apple_size = map_res_to_apple_size(res)
 
@@ -464,6 +464,12 @@ def convert_to_unicode(value):
     return value
 
 
+def load_json_from_url(url):
+    """Takes a URL and returns a Python dict representing the JSON of the URL's contents."""
+    response = urlopen(url)
+    str_response = response.read().decode('utf-8')
+    return json.loads(str_response)
+
 def main():
     """The main script function.
     """
@@ -490,10 +496,8 @@ def main():
         )
 
     else:
-        # Use the "Just Added" JSON file
-        newest_trailers = json.load(
-            urlopen('http://trailers.apple.com/trailers/home/feeds/just_added.json')
-        )
+        just_added_url = 'http://trailers.apple.com/trailers/home/feeds/just_added.json'
+        newest_trailers = load_json_from_url(just_added_url)
 
         for trailer in newest_trailers:
             url = 'http://trailers.apple.com' + trailer['location']
