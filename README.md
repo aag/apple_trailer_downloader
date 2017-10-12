@@ -7,6 +7,11 @@ It uses the "Just Added" JSON file that is also used by the web interface to
 find new trailers, and keeps track of the ones it has already downloaded so
 they aren't re-downloaded.
 
+Requirements
+------------
+Running this script requires Python 2.7 or Python 3.3+.
+
+
 Using
 -----
 To download all the "Just Added" trailers in 720p into the script directory,
