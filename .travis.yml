@@ -10,5 +10,5 @@ install:
   - pip install pytest --upgrade
 script:
   # Only run pylint on Python 2 instances, because of the unicode() call
-  - if [[ $(python --version) < "Python 3" ]]; then pylint *.py; fi
+  - if [[ $(python --version 2>&1) < "Python 3" ]]; then pylint *.py; fi
   - pytest
