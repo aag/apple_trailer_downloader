@@ -20,15 +20,18 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import os
+import shutil
 import sys
-from os import path
+import tempfile
 
 # Add the parent directory to the path so we can import the main script
-sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import download_trailers as trailers
 
 
-TEST_DIR = test_dir = path.dirname(path.abspath(__file__))
+TEST_DIR = test_dir = os.path.dirname(os.path.abspath(__file__))
+DOWNLOAD_LIST_FIXTURE_PATH = os.path.join(TEST_DIR, 'fixtures', 'download_list.txt')
 
 
 def test_map_res_to_apple_size_480():
@@ -89,6 +92,48 @@ def test_get_downloaded_files_missing_file():
 
 
 def test_get_downloaded_files_existing_file():
-    list_file_path = path.join(TEST_DIR, 'fixtures', 'download_list.txt')
     download_list = [u'Film.Trailer 2.1080p.mov', u'☃.Clip.480p.mov']
-    assert trailers.get_downloaded_files(list_file_path) == download_list
+    assert trailers.get_downloaded_files(DOWNLOAD_LIST_FIXTURE_PATH) == download_list
+
+
+def test_write_downloaded_files_new_file():
+    tmp_file, tmp_file_path = tempfile.mkstemp()
+    os.close(tmp_file)
+
+    trailers.write_downloaded_files(['Film 1.Trailer 2.1080p.mov', 'Film2.mov'], tmp_file_path)
+
+    assert trailers.get_downloaded_files(tmp_file_path) == [u'Film 1.Trailer 2.1080p.mov', u'Film2.mov']
+    os.remove(tmp_file_path)
+
+
+def test_write_downloaded_files_existing_file():
+    tmp_file, tmp_file_path = tempfile.mkstemp()
+    os.close(tmp_file)
+    shutil.copyfile(DOWNLOAD_LIST_FIXTURE_PATH, tmp_file_path)
+
+    trailers.write_downloaded_files(['♪.Trailer.1080p.mov'], tmp_file_path)
+
+    assert trailers.get_downloaded_files(tmp_file_path) == [u'♪.Trailer.1080p.mov']
+    os.remove(tmp_file_path)
+
+
+def test_record_downloaded_file_new_file():
+    tmp_file, tmp_file_path = tempfile.mkstemp()
+    os.close(tmp_file)
+
+    trailers.record_downloaded_file('✓.Trailer.mov', tmp_file_path)
+
+    assert trailers.get_downloaded_files(tmp_file_path) == [u'✓.Trailer.mov']
+    os.remove(tmp_file_path)
+
+
+def test_record_downloaded_file_existing_file():
+    tmp_file, tmp_file_path = tempfile.mkstemp()
+    os.close(tmp_file)
+    shutil.copyfile(DOWNLOAD_LIST_FIXTURE_PATH, tmp_file_path)
+    full_downloaded_list = [u'Film.Trailer 2.1080p.mov', u'☃.Clip.480p.mov', u'⚡.mov']
+
+    trailers.record_downloaded_file('⚡.mov', tmp_file_path)
+
+    assert trailers.get_downloaded_files(tmp_file_path) == full_downloaded_list
+    os.remove(tmp_file_path)

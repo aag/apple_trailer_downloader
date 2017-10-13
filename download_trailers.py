@@ -30,7 +30,6 @@ Some imports are declared inside of functions, so that this script can be
 # Require using print as a function instead of a keyword
 from __future__ import print_function
 
-import codecs
 import io
 import json
 import logging
@@ -459,7 +458,10 @@ def convert_to_unicode(value):
     string, because it always has to be a unicode string.
     """
     if sys.version_info < (3,):
-        return codecs.unicode_escape_decode(value)[0]
+        if isinstance(value, basestring):
+            if not isinstance(value, unicode):
+                value = unicode(value, 'utf-8')
+        return value
 
     return value
 
