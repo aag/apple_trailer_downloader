@@ -34,6 +34,7 @@ import io
 import json
 import logging
 import os.path
+import re
 import shutil
 import socket
 import sys
@@ -223,14 +224,16 @@ def download_trailers_from_page(page_url, dl_list_path, res, destdir, types):
 
 
 def get_trailer_filename(film_title, video_type, res):
-    """Take video info and convert it to the correct filename.
+    """Take video info and convert it to a safe, normalized filename.
 
     In addition to stripping leading and trailing whitespace from the title
     and converting to unicode, this function also removes characters that
     should not be used in filenames on various operating systems."""
-    trailer_file_name = film_title.strip() + '.' + video_type + '.' + res + 'p.mov'
-    trailer_file_name = convert_to_unicode(trailer_file_name)
-    return "".join(s for s in trailer_file_name if s not in r'\/:*?<>|#%&{}$!\'"@+`=')
+    trailer_file_name = ''.join(s for s in film_title if s not in r'\/:*?<>|#%&{}$!\'"@+`=')
+    # Remove repeating spaces
+    trailer_file_name = re.sub(r'\s\s+', ' ', trailer_file_name)
+    trailer_file_name = trailer_file_name.strip() + '.' + video_type + '.' + res + 'p.mov'
+    return convert_to_unicode(trailer_file_name)
 
 
 def get_config_values(config_path, defaults):

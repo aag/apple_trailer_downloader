@@ -137,3 +137,19 @@ def test_record_downloaded_file_existing_file():
 
     assert trailers.get_downloaded_files(tmp_file_path) == full_downloaded_list
     os.remove(tmp_file_path)
+
+
+def test_get_trailer_filename_simple():
+    assert trailers.get_trailer_filename('The Hunger Games', 'Trailer', '1080') == u'The Hunger Games.Trailer.1080p.mov'
+
+
+def test_get_trailer_filename_unicode():
+    assert trailers.get_trailer_filename('★ Mötley Crüe ★', 'Clip 2', '480') == u'★ Mötley Crüe ★.Clip 2.480p.mov'
+
+
+def test_get_trailer_filename_blacklist_chars():
+    assert trailers.get_trailer_filename("Sophie's Choice: 1 + ? = ?", 'Clip 2', '480') == u'Sophies Choice 1.Clip 2.480p.mov'
+
+
+def test_get_trailer_filename_repeating_spaces():
+    assert trailers.get_trailer_filename("  Film    :   + ? = ?   Movie", 'First Look', '720') == u'Film Movie.First Look.720p.mov'
