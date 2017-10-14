@@ -21,6 +21,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
+import pytest
 import shutil
 import sys
 import tempfile
@@ -29,9 +30,25 @@ import tempfile
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import download_trailers as trailers
 
+try:
+    # For Python 3.0 and later
+    from configparser import MissingSectionHeaderError
+    from configparser import Error
+except ImportError:
+    # Fall back to Python 2's naming
+    from ConfigParser import MissingSectionHeaderError
+    from ConfigParser import Error
+
 
 TEST_DIR = test_dir = os.path.dirname(os.path.abspath(__file__))
 DOWNLOAD_LIST_FIXTURE_PATH = os.path.join(TEST_DIR, 'fixtures', 'download_list.txt')
+
+SOME_CONFIG_DEFAULTS = {
+    'download_dir': '/tmp/download',
+    'resolution': '720',
+    'video_types': 'single_trailer',
+    'output_level': 'debug',
+}
 
 
 def test_map_res_to_apple_size_480():
@@ -140,16 +157,59 @@ def test_record_downloaded_file_existing_file():
 
 
 def test_get_trailer_filename_simple():
-    assert trailers.get_trailer_filename('The Hunger Games', 'Trailer', '1080') == u'The Hunger Games.Trailer.1080p.mov'
+    filename = u'The Hunger Games.Trailer.1080p.mov'
+    assert trailers.get_trailer_filename('The Hunger Games', 'Trailer', '1080') == filename
 
 
 def test_get_trailer_filename_unicode():
-    assert trailers.get_trailer_filename('★ Mötley Crüe ★', 'Clip 2', '480') == u'★ Mötley Crüe ★.Clip 2.480p.mov'
+    filename = u'★ Mötley Crüe ★.Clip 2.480p.mov'
+    assert trailers.get_trailer_filename('★ Mötley Crüe ★', 'Clip 2', '480') == filename
 
 
 def test_get_trailer_filename_blacklist_chars():
-    assert trailers.get_trailer_filename("Sophie's Choice: 1 + ? = ?", 'Clip 2', '480') == u'Sophies Choice 1.Clip 2.480p.mov'
+    filename = u'Sophies Choice 1.Clip 2.480p.mov'
+    assert trailers.get_trailer_filename("Sophie's Choice: 1 + ? = ?", 'Clip 2', '480') == filename
 
 
 def test_get_trailer_filename_repeating_spaces():
-    assert trailers.get_trailer_filename("  Film    :   + ? = ?   Movie", 'First Look', '720') == u'Film Movie.First Look.720p.mov'
+    filename = u'Film Movie.First Look.720p.mov'
+    assert trailers.get_trailer_filename("  Film    :   + ? = ?   Movie", 'First Look', '720') == filename
+
+
+def test_get_config_values_no_config_file():
+    missing_file_path = '/not/a/path/on/any/real/system/settings.cfg'
+    assert trailers.get_config_values(missing_file_path, SOME_CONFIG_DEFAULTS) == SOME_CONFIG_DEFAULTS
+
+
+def test_get_config_values_empty_config_file():
+    empty_config_file = os.path.join(TEST_DIR, 'fixtures', 'empty_settings.cfg')
+
+    assert trailers.get_config_values(empty_config_file, SOME_CONFIG_DEFAULTS) == SOME_CONFIG_DEFAULTS
+
+
+def test_get_config_values_normal_config_file():
+    empty_config_file = os.path.join(TEST_DIR, 'fixtures', 'normal_settings.cfg')
+    config_values = {
+        'download_dir': '~/Videos/trailers',
+        'list_file': '~/Videos/download_list.txt',
+        'resolution': '1080',
+        'video_types': 'all',
+        'output_level': 'error',
+    }
+
+    assert trailers.get_config_values(empty_config_file, SOME_CONFIG_DEFAULTS) == config_values
+
+
+def test_get_config_values_missing_header_config_file():
+    with pytest.raises(MissingSectionHeaderError):
+        missing_header_config_file = os.path.join(TEST_DIR, 'fixtures', 'no_header_settings.cfg')
+    
+        trailers.get_config_values(missing_header_config_file, SOME_CONFIG_DEFAULTS)
+
+
+def test_get_config_values_missing_values_config_file():
+    with pytest.raises(Error):
+        unparsable_config_file = os.path.join(TEST_DIR, 'fixtures', 'unparsable_settings.cfg')
+
+        trailers.get_config_values(unparsable_config_file, SOME_CONFIG_DEFAULTS)
+

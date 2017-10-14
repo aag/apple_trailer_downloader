@@ -41,12 +41,16 @@ import sys
 
 try:
     # For Python 3.0 and later
+    from configparser import Error
+    from configparser import MissingSectionHeaderError
     from urllib.request import urlopen
     from urllib.request import Request
     from urllib.error import HTTPError
     from urllib.error import URLError
 except ImportError:
-    # Fall back to Python 2's urllib2
+    # Fall back to Python 2's naming
+    from ConfigParser import Error
+    from ConfigParser import MissingSectionHeaderError
     from urllib2 import urlopen
     from urllib2 import Request
     from urllib2 import HTTPError
@@ -298,12 +302,7 @@ def get_settings():
     if 'config_path' in args:
         config_path = args['config_path']
 
-    try:
-        config = get_config_values(config_path, defaults)
-    except ValueError as ex:
-        print("Configuration error: %s" % ex)
-        print('Exiting...')
-        exit()
+    config = get_config_values(config_path, defaults)
 
     settings = config.copy()
     settings.update(args)
@@ -475,10 +474,20 @@ def load_json_from_url(url):
     str_response = response.read().decode('utf-8')
     return json.loads(str_response)
 
+
 def main():
     """The main script function.
     """
-    settings = get_settings()
+    try:
+        settings = get_settings()
+    except MissingSectionHeaderError:
+        print('Configuration file is missing a header section, ' +
+              'try adding [DEFAULT] at the top of the file')
+        return
+    except Error as ex:
+        print("Configuration error: %s" % ex)
+        return
+
     configure_logging(settings['output_level'])
 
     logging.debug("Using configuration values:")
