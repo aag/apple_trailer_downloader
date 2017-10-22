@@ -183,13 +183,13 @@ def test_get_config_values_no_config_file():
 
 
 def test_get_config_values_empty_config_file():
-    empty_config_file = os.path.join(TEST_DIR, 'fixtures', 'empty_settings.cfg')
+    empty_config_file = os.path.join(TEST_DIR, 'fixtures', 'settings', 'empty_settings.cfg')
 
     assert trailers.get_config_values(empty_config_file, SOME_CONFIG_DEFAULTS) == SOME_CONFIG_DEFAULTS
 
 
 def test_get_config_values_normal_config_file():
-    empty_config_file = os.path.join(TEST_DIR, 'fixtures', 'normal_settings.cfg')
+    empty_config_file = os.path.join(TEST_DIR, 'fixtures', 'settings', 'normal_settings.cfg')
     config_values = {
         'download_dir': '~/Videos/trailers',
         'list_file': '~/Videos/download_list.txt',
@@ -203,14 +203,14 @@ def test_get_config_values_normal_config_file():
 
 def test_get_config_values_missing_header_config_file():
     with pytest.raises(MissingSectionHeaderError):
-        missing_header_config_file = os.path.join(TEST_DIR, 'fixtures', 'no_header_settings.cfg')
+        missing_header_config_file = os.path.join(TEST_DIR, 'fixtures', 'settings', 'no_header_settings.cfg')
     
         trailers.get_config_values(missing_header_config_file, SOME_CONFIG_DEFAULTS)
 
 
 def test_get_config_values_missing_values_config_file():
     with pytest.raises(Error):
-        unparsable_config_file = os.path.join(TEST_DIR, 'fixtures', 'unparsable_settings.cfg')
+        unparsable_config_file = os.path.join(TEST_DIR, 'fixtures', 'settings', 'unparsable_settings.cfg')
 
         trailers.get_config_values(unparsable_config_file, SOME_CONFIG_DEFAULTS)
 
