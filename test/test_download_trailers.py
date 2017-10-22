@@ -64,19 +64,15 @@ REQUIRED_SETTINGS = ['resolution', 'download_dir', 'video_types', 'output_level'
 
 
 def test_map_res_to_apple_size_480():
-    assert trailers.map_res_to_apple_size('480') == 'sd'
+    assert trailers.map_res_to_apple_size('480') == u'sd'
 
 
 def test_map_res_to_apple_size_720():
-    assert trailers.map_res_to_apple_size('720') == 'hd720'
+    assert trailers.map_res_to_apple_size('720') == u'hd720'
 
 
 def test_map_res_to_apple_size_1080():
-    assert trailers.map_res_to_apple_size('1080') == 'hd1080'
-
-
-def test_convert_to_unicode():
-    assert trailers.convert_to_unicode('test') == u'test'
+    assert trailers.map_res_to_apple_size('1080') == u'hd1080'
 
 
 def test_convert_src_url_to_file_url():
@@ -87,33 +83,33 @@ def test_convert_src_url_to_file_url():
 
 def test_should_download_file_all():
     assert trailers.should_download_file('all', '')
-    assert trailers.should_download_file('ALL', 'The Making of Safe and Sound')
-    assert trailers.should_download_file('all', 'Trailer')
+    assert trailers.should_download_file('ALL', u'The Making of Safe and Sound')
+    assert trailers.should_download_file('all', u'Trailer')
 
 
 def test_should_download_file_single_trailer_trailer():
-    assert trailers.should_download_file('single_trailer', 'Trailer')
+    assert trailers.should_download_file('single_trailer', u'Trailer')
 
 
 def test_should_download_file_single_trailer_non_trailer():
-    assert not trailers.should_download_file('single_trailer', '')
-    assert not trailers.should_download_file('SINGLE_TRAILER', 'Clip')
-    assert not trailers.should_download_file('Single_Trailer', 'Sneak Peek')
-    assert not trailers.should_download_file('single_trailer', 'Trailer 2')
+    assert not trailers.should_download_file('single_trailer', u'')
+    assert not trailers.should_download_file('SINGLE_TRAILER', u'Clip')
+    assert not trailers.should_download_file('Single_Trailer', u'Sneak Peek')
+    assert not trailers.should_download_file('single_trailer', u'Trailer 2')
 
 
 def test_should_download_file_trailers_trailers():
-    assert trailers.should_download_file('trailers', 'Trailer')
-    assert trailers.should_download_file('Trailers', 'Trailer 2')
-    assert trailers.should_download_file('TRAILERS', 'Teaser')
-    assert trailers.should_download_file('trailers', 'Teaser 2')
-    assert trailers.should_download_file('trailers', 'First Look')
+    assert trailers.should_download_file('trailers', u'Trailer')
+    assert trailers.should_download_file('Trailers', u'Trailer 2')
+    assert trailers.should_download_file('TRAILERS', u'Teaser')
+    assert trailers.should_download_file('trailers', u'Teaser 2')
+    assert trailers.should_download_file('trailers', u'First Look')
 
 
 def test_should_download_file_trailers_non_trailers():
-    assert not trailers.should_download_file('trailers', 'Clip')
-    assert not trailers.should_download_file('TRAILERS', 'Sneak Peek')
-    assert not trailers.should_download_file('Trailers', 'The Making of Safe and Sound')
+    assert not trailers.should_download_file('trailers', u'Clip')
+    assert not trailers.should_download_file('TRAILERS', u'Sneak Peek')
+    assert not trailers.should_download_file('Trailers', u'The Making of Safe and Sound')
 
 
 def test_get_downloaded_files_missing_file():
@@ -129,7 +125,7 @@ def test_write_downloaded_files_new_file():
     tmp_file, tmp_file_path = tempfile.mkstemp()
     os.close(tmp_file)
 
-    trailers.write_downloaded_files(['Film 1.Trailer 2.1080p.mov', 'Film2.mov'], tmp_file_path)
+    trailers.write_downloaded_files([u'Film 1.Trailer 2.1080p.mov', u'Film2.mov'], tmp_file_path)
 
     assert trailers.get_downloaded_files(tmp_file_path) == [u'Film 1.Trailer 2.1080p.mov', u'Film2.mov']
     os.remove(tmp_file_path)
@@ -140,7 +136,7 @@ def test_write_downloaded_files_existing_file():
     os.close(tmp_file)
     shutil.copyfile(DOWNLOAD_LIST_FIXTURE_PATH, tmp_file_path)
 
-    trailers.write_downloaded_files(['♪.Trailer.1080p.mov'], tmp_file_path)
+    trailers.write_downloaded_files([u'♪.Trailer.1080p.mov'], tmp_file_path)
 
     assert trailers.get_downloaded_files(tmp_file_path) == [u'♪.Trailer.1080p.mov']
     os.remove(tmp_file_path)
@@ -150,7 +146,7 @@ def test_record_downloaded_file_new_file():
     tmp_file, tmp_file_path = tempfile.mkstemp()
     os.close(tmp_file)
 
-    trailers.record_downloaded_file('✓.Trailer.mov', tmp_file_path)
+    trailers.record_downloaded_file(u'✓.Trailer.mov', tmp_file_path)
 
     assert trailers.get_downloaded_files(tmp_file_path) == [u'✓.Trailer.mov']
     os.remove(tmp_file_path)
@@ -162,7 +158,7 @@ def test_record_downloaded_file_existing_file():
     shutil.copyfile(DOWNLOAD_LIST_FIXTURE_PATH, tmp_file_path)
     full_downloaded_list = [u'Film.Trailer 2.1080p.mov', u'☃.Clip.480p.mov', u'⚡.mov']
 
-    trailers.record_downloaded_file('⚡.mov', tmp_file_path)
+    trailers.record_downloaded_file(u'⚡.mov', tmp_file_path)
 
     assert trailers.get_downloaded_files(tmp_file_path) == full_downloaded_list
     os.remove(tmp_file_path)
@@ -170,22 +166,22 @@ def test_record_downloaded_file_existing_file():
 
 def test_get_trailer_filename_simple():
     filename = u'The Hunger Games.Trailer.1080p.mov'
-    assert trailers.get_trailer_filename('The Hunger Games', 'Trailer', '1080') == filename
+    assert trailers.get_trailer_filename(u'The Hunger Games', u'Trailer', u'1080') == filename
 
 
 def test_get_trailer_filename_unicode():
     filename = u'★ Mötley Crüe ★.Clip 2.480p.mov'
-    assert trailers.get_trailer_filename('★ Mötley Crüe ★', 'Clip 2', '480') == filename
+    assert trailers.get_trailer_filename(u'★ Mötley Crüe ★', u'Clip 2', u'480') == filename
 
 
 def test_get_trailer_filename_blacklist_chars():
     filename = u'Sophies Choice 1.Clip 2.480p.mov'
-    assert trailers.get_trailer_filename("Sophie's Choice: 1 + ? = ?", 'Clip 2', '480') == filename
+    assert trailers.get_trailer_filename(u'Sophie\'s Choice: 1 + ? = ?', u'Clip 2', u'480') == filename
 
 
 def test_get_trailer_filename_repeating_spaces():
     filename = u'Film Movie.First Look.720p.mov'
-    assert trailers.get_trailer_filename("  Film    :   + ? = ?   Movie", 'First Look', '720') == filename
+    assert trailers.get_trailer_filename(u'  Film    :   + ?/= ?   Movie', u'First Look', u'720') == filename
 
 
 def test_get_config_values_no_config_file():
@@ -237,12 +233,12 @@ def test_configure_logging_invalid_level():
 
 
 def test_configure_logging_downloads():
-    trailers.configure_logging("downloads")
+    trailers.configure_logging('downloads')
     assert logging.root.getEffectiveLevel() == logging.INFO
 
 
 def test_configure_logging_error():
-    trailers.configure_logging("error")
+    trailers.configure_logging('error')
     assert logging.root.getEffectiveLevel() == logging.ERROR
 
 

@@ -34,7 +34,6 @@ import os.path
 import re
 import shutil
 import socket
-import sys
 
 try:
     # For Python 3.0 and later
@@ -88,7 +87,7 @@ def get_trailer_file_urls(page_url, res, types):
 def map_res_to_apple_size(res):
     """Map a video resolution to the equivalent value used in the data JSON file.
     """
-    res_mapping = {'480': 'sd', '720': 'hd720', '1080': 'hd1080'}
+    res_mapping = {'480': u'sd', '720': u'hd720', '1080': u'hd1080'}
     if res not in res_mapping:
         res_string = ', '.join(res_mapping.keys())
         raise ValueError("Invalid resolution. Valid values: %s" % res_string)
@@ -110,17 +109,18 @@ def should_download_file(requested_types, video_type):
     """
     do_download = False
     requested_types = requested_types.lower()
+    video_type = video_type.lower()
 
     if requested_types == 'all':
         do_download = True
 
     elif requested_types == 'single_trailer':
-        do_download = (video_type.lower() == 'trailer')
+        do_download = (video_type == 'trailer')
 
     elif requested_types == 'trailers':
-        if (video_type.lower().startswith('trailer') or
-                video_type.lower().startswith('teaser') or
-                video_type.lower() == 'first look'):
+        if (video_type.startswith('trailer') or
+                video_type.startswith('teaser') or
+                video_type == 'first look'):
             do_download = True
 
     return do_download
@@ -139,7 +139,7 @@ def get_downloaded_files(dl_list_path):
 
 def write_downloaded_files(file_list, dl_list_path):
     """Write the list of downloaded files to the text file"""
-    new_list = [convert_to_unicode(filename + '\n') for filename in file_list]
+    new_list = [filename + u'\n' for filename in file_list]
     downloads_file = io.open(dl_list_path, mode='w', encoding='utf-8')
     downloads_file.writelines(new_list)
     downloads_file.close()
@@ -231,11 +231,11 @@ def get_trailer_filename(film_title, video_type, res):
     In addition to stripping leading and trailing whitespace from the title
     and converting to unicode, this function also removes characters that
     should not be used in filenames on various operating systems."""
-    trailer_file_name = ''.join(s for s in film_title if s not in r'\/:*?<>|#%&{}$!\'"@+`=')
+    trailer_file_name = u''.join(s for s in film_title if s not in r'\/:*?<>|#%&{}$!\'"@+`=')
     # Remove repeating spaces
     trailer_file_name = re.sub(r'\s\s+', ' ', trailer_file_name)
-    trailer_file_name = trailer_file_name.strip() + '.' + video_type + '.' + res + 'p.mov'
-    return convert_to_unicode(trailer_file_name)
+    trailer_file_name = trailer_file_name.strip() + '.' + video_type + '.' + res + u'p.mov'
+    return trailer_file_name
 
 
 def validate_settings(settings):
@@ -454,19 +454,6 @@ def configure_logging(output_level):
 
     logging.basicConfig(format='%(message)s')
     logging.getLogger().setLevel(log_level)
-
-
-def convert_to_unicode(value):
-    """In Python 2, convert the given string to a unicode string. In Python 3, just return the
-    string, because it always has to be a unicode string.
-    """
-    if sys.version_info < (3,):
-        if isinstance(value, basestring):
-            if not isinstance(value, unicode):
-                value = unicode(value, 'utf-8')
-        return value
-
-    return value
 
 
 def load_json_from_url(url):
