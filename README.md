@@ -9,19 +9,37 @@ they aren't re-downloaded.
 
 Requirements
 ------------
-Running this script requires Python 2.7 or Python 3.3+.
+Running this script requires Python 2.7 or Python 3.3+. If you don't currently have
+Python installed on your computer, see the setup documentation for
+[Python 2](https://docs.python.org/2/using/index.html) or
+[Python 3](https://docs.python.org/3/using/index.html).
 
 
-Using
+Installation
+------------
+The script consists of a single `.py` file that you can put anywhere on your computer.
+First, download the most recent release from [the releases page](/aag/apple_trailer_downloader/releases).
+Extract the files and either run the script from the extracted directory or copy the
+`download_trailers.py` script to any location of your choosing.
+
+Alternatively, if you're comfortable using git, you can clone the repository to your computer
+and run the script from the git clone. 
+
+
+Usage
 -----
-To download all the "Just Added" trailers in 720p into the script directory,
-run:
+The downloader works as a command-line program without a graphical interface. To run it, you
+run `download_trailers.py` from a terminal.
+
+If you do not provide any command-line arguments, the script will download the first trailer
+for each of the current "Just Added" films, in 720p resolution, into the same directory as
+the python script. Just run:
 
 ```
 $ python download_trailers.py
 ```
 
-You can also download a specific trailer by passing the URL of the trailer's
+You can also download a single specific trailer by passing the URL of the trailer's
 page on the Apple Trailers site with the `-u` parameter.  For example:
 
 ```
@@ -51,7 +69,7 @@ If a setting is specified in both the config file and a command-line option,
 the command-line setting will override the setting in the config file.
 
 The script stores a list of files it has already downloaded in in a text
-file.  Any trailer file listed in the download list will not be re-downloaded,
+file.  Any trailer listed in this file will not be re-downloaded,
 even if the trailer file has already been deleted.  This allows you to delete
 trailers after you've watched them, but still run the script on a regular
 basis and only download trailers you've never seen before. By default the
@@ -62,5 +80,5 @@ config file.
 
 License
 -------
-This code is free software licensed under the GPL v3.  See the COPYING file
+This code is free software licensed under the GPL v3.  See the [COPYING](COPYING) file
 for details.
