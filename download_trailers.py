@@ -443,14 +443,14 @@ def configure_logging(output_level):
     """Configure the logger to print messages with at least the level of the given
     configuration value.
     """
-    loglevel = logging.DEBUG
+    log_level = logging.DEBUG
     if output_level == 'downloads':
-        loglevel = logging.INFO
+        log_level = logging.INFO
     elif output_level == 'error':
-        loglevel = logging.ERROR
+        log_level = logging.ERROR
 
     logging.basicConfig(format='%(message)s')
-    logging.getLogger().setLevel(loglevel)
+    logging.getLogger().setLevel(log_level)
 
 
 def convert_to_unicode(value):
