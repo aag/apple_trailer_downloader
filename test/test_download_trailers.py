@@ -20,6 +20,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import logging
 import os
 import pytest
 import shutil
@@ -213,3 +214,22 @@ def test_get_config_values_missing_values_config_file():
 
         trailers.get_config_values(unparsable_config_file, SOME_CONFIG_DEFAULTS)
 
+
+def test_configure_logging_default():
+    trailers.configure_logging('')
+    assert logging.root.getEffectiveLevel() == logging.DEBUG
+
+
+def test_configure_logging_invalid_level():
+    trailers.configure_logging('not a real log level')
+    assert logging.root.getEffectiveLevel() == logging.DEBUG
+
+
+def test_configure_logging_downloads():
+    trailers.configure_logging("downloads")
+    assert logging.root.getEffectiveLevel() == logging.INFO
+
+
+def test_configure_logging_error():
+    trailers.configure_logging("error")
+    assert logging.root.getEffectiveLevel() == logging.ERROR
