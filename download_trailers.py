@@ -109,6 +109,7 @@ def should_download_file(requested_types, video_type):
     return true if the video file should be downloaded.
     """
     do_download = False
+    requested_types = requested_types.lower()
 
     if requested_types == 'all':
         do_download = True
@@ -237,6 +238,40 @@ def get_trailer_filename(film_title, video_type, res):
     return convert_to_unicode(trailer_file_name)
 
 
+def validate_settings(settings):
+    """Validate the settings in the given dictionary. If any setting is invalid, raises
+    an Error with a user message"""
+    valid_resolutions = ['480', '720', '1080']
+    valid_video_types = ['single_trailer', 'trailers', 'all']
+    valid_output_levels = ['debug', 'downloads', 'error']
+
+    required_settings = ['resolution', 'download_dir', 'video_types', 'output_level', 'list_file']
+
+    for setting in required_settings:
+        if setting not in settings:
+            raise ValueError("cannot find value for '{}'".format(setting))
+
+    if settings['resolution'] not in valid_resolutions:
+        res_string = ', '.join(valid_resolutions)
+        raise ValueError("invalid resolution. Valid values: {}".format(res_string))
+
+    if not os.path.exists(settings['download_dir']):
+        raise ValueError('the download directory must be a valid path')
+
+    if settings['video_types'].lower() not in valid_video_types:
+        types_string = ', '.join(valid_video_types)
+        raise ValueError("invalid video type. Valid values: {}".format(types_string))
+
+    if settings['output_level'].lower() not in valid_output_levels:
+        output_string = ', '.join(valid_output_levels)
+        raise ValueError("invalid output level. Valid values: {}".format(output_string))
+
+    if not os.path.exists(os.path.dirname(settings['list_file'])):
+        raise ValueError('the list file directory must be a valid path')
+
+    return True
+
+
 def get_config_values(config_path, defaults):
     """Get the script's configuration values and return them in a dict
 
@@ -289,10 +324,6 @@ def get_settings():
         'output_level': 'debug',
     }
 
-    valid_resolutions = ['480', '720', '1080']
-    valid_video_types = ['single_trailer', 'trailers', 'all']
-    valid_output_levels = ['debug', 'downloads', 'error']
-
     args = get_command_line_arguments()
 
     config_path = "{}/settings.cfg".format(script_dir)
@@ -315,24 +346,7 @@ def get_settings():
 
     settings['list_file'] = os.path.expanduser(settings['list_file'])
 
-    # Validate the settings
-    if settings['resolution'] not in valid_resolutions:
-        res_string = ', '.join(valid_resolutions)
-        raise Error("invalid resolution. Valid values: %s" % res_string)
-
-    if not os.path.exists(settings['download_dir']):
-        raise Error('the download directory must be a valid path')
-
-    if settings['video_types'] not in valid_video_types:
-        types_string = ', '.join(valid_video_types)
-        raise Error("invalid video type. Valid values: %s" % types_string)
-
-    if settings['output_level'] not in valid_output_levels:
-        output_string = ', '.join(valid_output_levels)
-        raise Error("invalid output level. Valid values: %s" % output_string)
-
-    if not os.path.exists(os.path.dirname(settings['list_file'])):
-        raise Error('the list file directory must be a valid path')
+    validate_settings(settings)
 
     return settings
 
@@ -430,6 +444,8 @@ def configure_logging(output_level):
     """Configure the logger to print messages with at least the level of the given
     configuration value.
     """
+    output_level = output_level.lower()
+
     log_level = logging.DEBUG
     if output_level == 'downloads':
         log_level = logging.INFO
@@ -472,7 +488,7 @@ def main():
         logging.error('Configuration file is missing a header section, ' +
                       'try adding [DEFAULT] at the top of the file')
         return
-    except Error as ex:
+    except (Error, ValueError) as ex:
         logging.error("Configuration error: %s", ex)
         return
 

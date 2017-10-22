@@ -20,6 +20,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import copy
 import logging
 import os
 import pytest
@@ -51,6 +52,16 @@ SOME_CONFIG_DEFAULTS = {
     'output_level': 'debug',
 }
 
+SOME_VALID_SETTINGS = {
+    'resolution': '1080',
+    'download_dir': '/',
+    'video_types': 'trailers',
+    'output_level': 'error',
+    'list_file': '/list.txt',
+}
+
+REQUIRED_SETTINGS = ['resolution', 'download_dir', 'video_types', 'output_level', 'list_file']
+
 
 def test_map_res_to_apple_size_480():
     assert trailers.map_res_to_apple_size('480') == 'sd'
@@ -76,7 +87,7 @@ def test_convert_src_url_to_file_url():
 
 def test_should_download_file_all():
     assert trailers.should_download_file('all', '')
-    assert trailers.should_download_file('all', 'The Making of Safe and Sound')
+    assert trailers.should_download_file('ALL', 'The Making of Safe and Sound')
     assert trailers.should_download_file('all', 'Trailer')
 
 
@@ -86,23 +97,23 @@ def test_should_download_file_single_trailer_trailer():
 
 def test_should_download_file_single_trailer_non_trailer():
     assert not trailers.should_download_file('single_trailer', '')
-    assert not trailers.should_download_file('single_trailer', 'Clip')
-    assert not trailers.should_download_file('single_trailer', 'Sneak Peek')
+    assert not trailers.should_download_file('SINGLE_TRAILER', 'Clip')
+    assert not trailers.should_download_file('Single_Trailer', 'Sneak Peek')
     assert not trailers.should_download_file('single_trailer', 'Trailer 2')
 
 
 def test_should_download_file_trailers_trailers():
     assert trailers.should_download_file('trailers', 'Trailer')
-    assert trailers.should_download_file('trailers', 'Trailer 2')
-    assert trailers.should_download_file('trailers', 'Teaser')
+    assert trailers.should_download_file('Trailers', 'Trailer 2')
+    assert trailers.should_download_file('TRAILERS', 'Teaser')
     assert trailers.should_download_file('trailers', 'Teaser 2')
     assert trailers.should_download_file('trailers', 'First Look')
 
 
 def test_should_download_file_trailers_non_trailers():
     assert not trailers.should_download_file('trailers', 'Clip')
-    assert not trailers.should_download_file('trailers', 'Sneak Peek')
-    assert not trailers.should_download_file('trailers', 'The Making of Safe and Sound')
+    assert not trailers.should_download_file('TRAILERS', 'Sneak Peek')
+    assert not trailers.should_download_file('Trailers', 'The Making of Safe and Sound')
 
 
 def test_get_downloaded_files_missing_file():
@@ -233,3 +244,92 @@ def test_configure_logging_downloads():
 def test_configure_logging_error():
     trailers.configure_logging("error")
     assert logging.root.getEffectiveLevel() == logging.ERROR
+
+
+def test_validate_settings_resolution_valid():
+    settings = copy.deepcopy(SOME_VALID_SETTINGS)
+    for resolution in ['480', '720', '1080']:
+        settings['resolution'] = resolution
+        assert trailers.validate_settings(settings)
+
+
+def test_validate_settings_invalid_resolutions():
+    settings = copy.deepcopy(SOME_VALID_SETTINGS)
+    for resolution in ['', '48', '7200', '1080p', '4k']:
+        with pytest.raises(ValueError):
+            settings['resolution'] = resolution
+            assert trailers.validate_settings(settings)
+
+
+def test_validate_settings_download_dir_valid():
+    settings = copy.deepcopy(SOME_VALID_SETTINGS)
+    existing_dir_path = tempfile.mkdtemp()
+
+    settings['download_dir'] = existing_dir_path
+    assert trailers.validate_settings(settings)
+
+    os.rmdir(existing_dir_path)
+
+
+def test_validate_settings_invalid_download_dir():
+    settings = copy.deepcopy(SOME_VALID_SETTINGS)
+    for path in ['', '/not/a/valid/path', '~', '~/']:
+        with pytest.raises(ValueError):
+            settings['download_dir'] = path
+            assert trailers.validate_settings(settings)
+
+
+def test_validate_settings_video_types_valid():
+    settings = copy.deepcopy(SOME_VALID_SETTINGS)
+    for video_type in ['single_trailer', 'trailers', 'all', 'All', 'ALL']:
+        settings['video_type'] = video_type
+        assert trailers.validate_settings(settings)
+
+
+def test_validate_settings_invalid_video_types():
+    settings = copy.deepcopy(SOME_VALID_SETTINGS)
+    for video_types in ['', 'trailer', 'single-trailer', 'everything', '*']:
+        with pytest.raises(ValueError):
+            settings['video_types'] = video_types
+            assert trailers.validate_settings(settings)
+
+
+def test_validate_settings_output_level_valid():
+    settings = copy.deepcopy(SOME_VALID_SETTINGS)
+    for output_level in ['debug', 'downloads', 'error', 'ERROR', 'Error']:
+        settings['output_level'] = output_level
+        assert trailers.validate_settings(settings)
+
+
+def test_validate_settings_invalid_output_level():
+    settings = copy.deepcopy(SOME_VALID_SETTINGS)
+    for output_level in ['', 'download', 'errors', '*', 'all']:
+        with pytest.raises(ValueError):
+            settings['output_level'] = output_level
+            assert trailers.validate_settings(settings)
+
+
+def test_validate_settings_list_file_valid():
+    settings = copy.deepcopy(SOME_VALID_SETTINGS)
+    existing_file_path = tempfile.NamedTemporaryFile().name
+
+    settings['list_file'] = existing_file_path
+    assert trailers.validate_settings(settings)
+
+
+def test_validate_settings_invalid_list_file():
+    with pytest.raises(ValueError):
+        settings = copy.deepcopy(SOME_VALID_SETTINGS)
+        missing_file_path = '/not/a/valid/path/on/any/real/system/list.txt'
+
+        settings['list_file'] = missing_file_path
+        assert trailers.validate_settings(settings)
+
+
+def test_validate_settings_setting_missing():
+    for setting in REQUIRED_SETTINGS:
+        with pytest.raises(ValueError):
+            settings = copy.deepcopy(SOME_VALID_SETTINGS)
+            settings.pop(setting)
+            trailers.validate_settings(settings)
+
