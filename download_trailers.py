@@ -27,9 +27,6 @@ Some imports are declared inside of functions, so that this script can be
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-# Require using print as a function instead of a keyword
-from __future__ import print_function
-
 import io
 import json
 import logging
@@ -271,7 +268,7 @@ def get_config_values(config_path, defaults):
             break
 
     if not config_file_found:
-        print('Config file not found.  Using default values.')
+        logging.info('Config file not found. Using default values.')
 
     return config_values
 
@@ -319,33 +316,23 @@ def get_settings():
     settings['list_file'] = os.path.expanduser(settings['list_file'])
 
     # Validate the settings
-    settings_error = False
     if settings['resolution'] not in valid_resolutions:
         res_string = ', '.join(valid_resolutions)
-        print("Configuration error: Invalid resolution. Valid values: %s" % res_string)
-        settings_error = True
+        raise Error("invalid resolution. Valid values: %s" % res_string)
 
     if not os.path.exists(settings['download_dir']):
-        print('Configuration error: The download directory must be a valid path')
-        settings_error = True
+        raise Error('the download directory must be a valid path')
 
     if settings['video_types'] not in valid_video_types:
         types_string = ', '.join(valid_video_types)
-        print("Configuration error: Invalid video type. Valid values: %s" % types_string)
-        settings_error = True
+        raise Error("invalid video type. Valid values: %s" % types_string)
 
     if settings['output_level'] not in valid_output_levels:
         output_string = ', '.join(valid_output_levels)
-        print("Configuration error: Invalid output level. Valid values: %s" % output_string)
-        settings_error = True
+        raise Error("invalid output level. Valid values: %s" % output_string)
 
     if not os.path.exists(os.path.dirname(settings['list_file'])):
-        print('Configuration error: the list file directory must be a valid path')
-        settings_error = True
-
-    if settings_error:
-        print('Exiting...')
-        exit()
+        raise Error('the list file directory must be a valid path')
 
     return settings
 
@@ -476,14 +463,17 @@ def load_json_from_url(url):
 def main():
     """The main script function.
     """
+    # Set default log level so we can log messages generated while loading the settings.
+    configure_logging('')
+
     try:
         settings = get_settings()
     except MissingSectionHeaderError:
-        print('Configuration file is missing a header section, ' +
-              'try adding [DEFAULT] at the top of the file')
+        logging.error('Configuration file is missing a header section, ' +
+                      'try adding [DEFAULT] at the top of the file')
         return
     except Error as ex:
-        print("Configuration error: %s" % ex)
+        logging.error("Configuration error: %s", ex)
         return
 
     configure_logging(settings['output_level'])
