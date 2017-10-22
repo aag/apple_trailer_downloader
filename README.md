@@ -18,7 +18,7 @@ Python installed on your computer, see the setup documentation for
 Installation
 ------------
 The script consists of a single `.py` file that you can put anywhere on your computer.
-First, download the most recent release from [the releases page](/aag/apple_trailer_downloader/releases).
+First, download the most recent release from [the releases page](https://github.com/aag/apple_trailer_downloader/releases).
 Extract the files and either run the script from the extracted directory or copy the
 `download_trailers.py` script to any location of your choosing.
 
