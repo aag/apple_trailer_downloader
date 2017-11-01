@@ -78,6 +78,77 @@ download directory, but you can change the file location with the
 `--listfile` command-line option or with the `list_file` option in the
 config file.
 
+
+Usage as a Python Library
+-------------------------
+If you want to download trailers in your own Python application, you can use
+`download_trailers.py` as a library to make that easier. Note that since we
+have not reached a 1.0 release, the API is not guaranteed to be stable.
+
+
+Example:
+
+```python
+import download_trailers as trailers
+
+hg_trailers = trailers.get_trailer_file_urls('http://trailers.apple.com/trailers/lions_gate/thehungergames/', '480', 'trailers')
+
+for trailer in hg_trailers:
+    filename = trailers.get_trailer_filename(trailer['title'], trailer['type'], trailer['res'])
+    trailers.download_trailer_file(trailer['url'], '/tmp/', filename)
+```
+
+
+Development
+-----------
+
+### Tests
+
+There is a test suite written with pytest. If you don't already have it installed,
+you can install it with pip.
+
+```
+$ sudo pip install pytest
+```
+
+Or, for Python 3:
+
+```
+$ sudo pip3 install pytest
+```
+
+You can then run all the tests by running `pytest` in the top directory of the repository.
+If you have both Python 2.7 and Python 3 installed, you can run the tests with
+both versions with this command:
+
+```
+$ python -m pytest && python3 -m pytest
+```
+
+### Coding Style
+
+The code in the script is written to follow [the PEP8 style guide](https://www.python.org/dev/peps/pep-0008/).
+There is a pylint configuration file to check the coding style. You can install pylint
+with pip.
+
+```
+$ sudo pip install pylint
+```
+
+Or, for Python 3:
+
+```
+$ sudo pip3 install pylint
+```
+
+You can run the linter by running `pylint *.py` in the top directory of the repository.
+If you have both Python 2.7 and Python 3 installed, you can run the linter with
+both versions with this command:
+
+```
+$ python -m pylint *.py && python3 -m pylint *.py
+```
+
 License
 -------
 This code is free software licensed under the GPL v3.  See the [COPYING](COPYING) file
