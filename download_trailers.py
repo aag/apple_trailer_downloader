@@ -35,22 +35,22 @@ import re
 import shutil
 import socket
 
-from configparser import Error
-from configparser import MissingSectionHeaderError
-
 try:
-    # For Python 3.0 and later
-    from urllib.request import urlopen
-    from urllib.request import Request
-    from urllib.error import HTTPError
-    from urllib.error import URLError
-except ImportError:
-    # Fall back to Python 2's naming
+    # For Python 2
+    from ConfigParser import Error
+    from ConfigParser import MissingSectionHeaderError
     from urllib2 import urlopen
     from urllib2 import Request
     from urllib2 import HTTPError
     from urllib2 import URLError
-
+except ImportError:
+    # For Python 3.0 and later
+    from configparser import Error
+    from configparser import MissingSectionHeaderError
+    from urllib.request import urlopen
+    from urllib.request import Request
+    from urllib.error import HTTPError
+    from urllib.error import URLError
 
 def get_trailer_file_urls(page_url, res, types):
     """Get all trailer file URLs from the given movie page in the given
@@ -280,11 +280,11 @@ def get_config_values(config_path, defaults):
     """
 
     try:
+        # For Python 2
+        from ConfigParser import SafeConfigParser as ConfigParser
+    except ImportError:
         # For Python 3.0 and later
         from configparser import ConfigParser
-    except ImportError:
-        # Fall back to Python 2's naming
-        from ConfigParser import SafeConfigParser as ConfigParser
 
     config = ConfigParser(defaults)
     config_values = config.defaults()

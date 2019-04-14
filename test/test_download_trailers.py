@@ -33,14 +33,13 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import download_trailers as trailers
 
 try:
+    # For Python 2
+    from ConfigParser import MissingSectionHeaderError
+    from ConfigParser import Error
+except ImportError:
     # For Python 3.0 and later
     from configparser import MissingSectionHeaderError
     from configparser import Error
-except ImportError:
-    # Fall back to Python 2's naming
-    from ConfigParser import MissingSectionHeaderError
-    from ConfigParser import Error
-
 
 TEST_DIR = test_dir = os.path.dirname(os.path.abspath(__file__))
 DOWNLOAD_LIST_FIXTURE_PATH = os.path.join(TEST_DIR, 'fixtures', 'download_list.txt')
