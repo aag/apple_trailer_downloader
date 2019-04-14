@@ -88,6 +88,7 @@ def test_should_download_file_all():
 
 def test_should_download_file_single_trailer_trailer():
     assert trailers.should_download_file('single_trailer', u'Trailer')
+    assert trailers.should_download_file('single_trailer', u'Trailer 1')
 
 
 def test_should_download_file_single_trailer_non_trailer():
