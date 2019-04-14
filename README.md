@@ -127,26 +127,31 @@ $ python -m pytest && python3 -m pytest
 
 ### Coding Style
 
-The code in the script is written to follow [the PEP8 style guide](https://www.python.org/dev/peps/pep-0008/).
-There is a pylint configuration file to check the coding style. You can install pylint
-with pip.
+The code in the script is written to follow
+[the PEP8 style guide](https://www.python.org/dev/peps/pep-0008/).
+Both pylint and flake8 are used to check the coding style. You can install
+both with pip.
 
 ```
 $ sudo pip install pylint
+$ sudo pip install flake8
 ```
 
 Or, for Python 3:
 
 ```
 $ sudo pip3 install pylint
+$ sudo pip3 install flake8
 ```
 
-You can run the linter by running `pylint *.py` in the top directory of the repository.
-If you have both Python 2.7 and Python 3 installed, you can run the linter with
-both versions with this command:
+You can run the linters by running `pylint *.py` and `flake8 *.py` in the top
+directory of the repository.
+If you have both Python 2.7 and Python 3 installed, you can run the linters
+with both versions with these commands:
 
 ```
 $ python -m pylint *.py && python3 -m pylint *.py
+$ python -m flake8 *.py && python3 -m flake8 *.py
 ```
 
 License
