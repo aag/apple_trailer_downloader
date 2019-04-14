@@ -52,6 +52,7 @@ except ImportError:
     from urllib.error import HTTPError
     from urllib.error import URLError
 
+
 def get_trailer_file_urls(page_url, res, types):
     """Get all trailer file URLs from the given movie page in the given
     resolution and having the given trailer types.
@@ -103,8 +104,8 @@ def convert_src_url_to_file_url(src_url, res):
 
 
 def should_download_file(requested_types, video_type):
-    """Given the requested video types and the specified video type of a particular file,
-    return true if the video file should be downloaded.
+    """Given the requested video types and the specified video type of a
+    particular file, return true if the video file should be downloaded.
     """
     do_download = False
     requested_types = requested_types.lower()
@@ -145,7 +146,8 @@ def write_downloaded_files(file_list, dl_list_path):
 
 
 def record_downloaded_file(filename, dl_list_path):
-    """Appends the given filename to the text file of already downloaded files"""
+    """Appends the given filename to the text file of already downloaded
+    files"""
     file_list = get_downloaded_files(dl_list_path)
     file_list.append(filename)
     write_downloaded_files(file_list, dl_list_path)
@@ -185,7 +187,7 @@ def download_trailer_file(url, destdir, filename):
 
         logging.error("*** Error downloading file")
         return
-    except URLError as ex:
+    except URLError:
         logging.error("*** Error downloading file")
         return
 
@@ -196,33 +198,40 @@ def download_trailer_file(url, destdir, filename):
         if resume_download:
             logging.debug("  Resuming file %s", file_path)
             with open(file_path, 'ab') as local_file_handle:
-                shutil.copyfileobj(server_file_handle, local_file_handle, chunk_size)
+                shutil.copyfileobj(server_file_handle, local_file_handle,
+                                   chunk_size)
         else:
             logging.debug("  Saving file to %s", file_path)
             with open(file_path, 'wb') as local_file_handle:
-                shutil.copyfileobj(server_file_handle, local_file_handle, chunk_size)
+                shutil.copyfileobj(server_file_handle, local_file_handle,
+                                   chunk_size)
     except socket.error as ex:
         logging.error("*** Network error while downloading file: %s", ex)
         return
 
 
 def download_trailers_from_page(page_url, dl_list_path, res, destdir, types):
-    """Takes a page on the Apple Trailers website and downloads the trailer for the movie on
-    the page. Example URL: http://trailers.apple.com/trailers/lions_gate/thehungergames/"""
+    """Takes a page on the Apple Trailers website and downloads the trailer
+    for the movie on the page. Example URL:
+    http://trailers.apple.com/trailers/lions_gate/thehungergames/"""
 
     logging.debug('Checking for files at %s', page_url)
     trailer_urls = get_trailer_file_urls(page_url, res, types)
     downloaded_files = get_downloaded_files(dl_list_path)
 
     for trailer_url in trailer_urls:
-        trailer_file_name = get_trailer_filename(trailer_url['title'], trailer_url['type'],
+        trailer_file_name = get_trailer_filename(trailer_url['title'],
+                                                 trailer_url['type'],
                                                  trailer_url['res'])
         if trailer_file_name not in downloaded_files:
-            logging.info('Downloading ' + trailer_url['type'] + ': ' + trailer_file_name)
-            download_trailer_file(trailer_url['url'], destdir, trailer_file_name)
+            logging.info('Downloading %s: %s', trailer_url['type'],
+                         trailer_file_name)
+            download_trailer_file(trailer_url['url'], destdir,
+                                  trailer_file_name)
             record_downloaded_file(trailer_file_name, dl_list_path)
         else:
-            logging.debug('*** File already downloaded, skipping: %s', trailer_file_name)
+            logging.debug('*** File already downloaded, skipping: %s',
+                          trailer_file_name)
 
 
 def get_trailer_filename(film_title, video_type, res):
@@ -231,21 +240,24 @@ def get_trailer_filename(film_title, video_type, res):
     In addition to stripping leading and trailing whitespace from the title
     and converting to unicode, this function also removes characters that
     should not be used in filenames on various operating systems."""
-    trailer_file_name = u''.join(s for s in film_title if s not in r'\/:*?<>|#%&{}$!\'"@+`=')
+    trailer_file_name = u''.join(s for s in film_title
+                                 if s not in r'\/:*?<>|#%&{}$!\'"@+`=')
     # Remove repeating spaces
     trailer_file_name = re.sub(r'\s\s+', ' ', trailer_file_name)
-    trailer_file_name = trailer_file_name.strip() + '.' + video_type + '.' + res + u'p.mov'
+    trailer_file_name = u'{}.{}.{}p.mov'.format(trailer_file_name.strip(),
+                                                video_type, res)
     return trailer_file_name
 
 
 def validate_settings(settings):
-    """Validate the settings in the given dictionary. If any setting is invalid, raises
-    an Error with a user message"""
+    """Validate the settings in the given dictionary. If any setting is
+    invalid, raises an Error with a user message"""
     valid_resolutions = ['480', '720', '1080']
     valid_video_types = ['single_trailer', 'trailers', 'all']
     valid_output_levels = ['debug', 'downloads', 'error']
 
-    required_settings = ['resolution', 'download_dir', 'video_types', 'output_level', 'list_file']
+    required_settings = ['resolution', 'download_dir', 'video_types',
+                         'output_level', 'list_file']
 
     for setting in required_settings:
         if setting not in settings:
@@ -253,18 +265,21 @@ def validate_settings(settings):
 
     if settings['resolution'] not in valid_resolutions:
         res_string = ', '.join(valid_resolutions)
-        raise ValueError("invalid resolution. Valid values: {}".format(res_string))
+        raise ValueError("invalid resolution. Valid values: {}"
+                         .format(res_string))
 
     if not os.path.exists(settings['download_dir']):
         raise ValueError('the download directory must be a valid path')
 
     if settings['video_types'].lower() not in valid_video_types:
         types_string = ', '.join(valid_video_types)
-        raise ValueError("invalid video type. Valid values: {}".format(types_string))
+        raise ValueError("invalid video type. Valid values: {}"
+                         .format(types_string))
 
     if settings['output_level'].lower() not in valid_output_levels:
         output_string = ', '.join(valid_output_levels)
-        raise ValueError("invalid output level. Valid values: {}".format(output_string))
+        raise ValueError("invalid output level. Valid values: {}"
+                         .format(output_string))
 
     if not os.path.exists(os.path.dirname(settings['list_file'])):
         raise ValueError('the list file directory must be a valid path')
@@ -309,9 +324,9 @@ def get_config_values(config_path, defaults):
 
 
 def get_settings():
-    """Validate and return the user's settings as a combination of the default settings,
-    the settings file (if it exists) and the command-line options (if given).
-    """
+    """Validate and return the user's settings as a combination of the default
+    settings, the settings file (if it exists) and the command-line options
+    (if given)."""
 
     # Don't include list_file in the defaults, because the default value is
     # dependent on the configured download_dir, which isn't known until the
@@ -355,9 +370,10 @@ def get_command_line_arguments():
     import argparse
 
     parser = argparse.ArgumentParser(
-        description='Download movie trailers from the Apple website. With no arguments, will' +
-        'download all of the trailers in the current "Just Added" list. When a trailer page ' +
-        'URL is specified, will only download the single trailer at that URL. Example URL: ' +
+        description='Download movie trailers from the Apple website. With no '
+        'arguments, will download all of the trailers in the current '
+        '"Just Added" list. When a trailer page URL is specified, will only '
+        'download the single trailer at that URL. Example URL: '
         'http://trailers.apple.com/trailers/lions_gate/thehungergames/'
     )
 
@@ -454,7 +470,8 @@ def configure_logging(output_level):
 
 
 def load_json_from_url(url):
-    """Takes a URL and returns a Python dict representing the JSON of the URL's contents."""
+    """Takes a URL and returns a Python dict representing the JSON of the
+    URL's contents."""
     response = urlopen(url)
     str_response = response.read().decode('utf-8')
     return json.loads(str_response)
@@ -463,7 +480,8 @@ def load_json_from_url(url):
 def main():
     """The main script function.
     """
-    # Set default log level so we can log messages generated while loading the settings.
+    # Set default log level so we can log messages generated while loading
+    # the settings.
     configure_logging('')
 
     try:
@@ -498,7 +516,8 @@ def main():
         )
 
     else:
-        just_added_url = 'http://trailers.apple.com/trailers/home/feeds/just_added.json'
+        just_added_url = ('http://trailers.apple.com/trailers/'
+                          'home/feeds/just_added.json')
         newest_trailers = load_json_from_url(just_added_url)
 
         for trailer in newest_trailers:
