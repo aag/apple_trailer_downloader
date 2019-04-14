@@ -35,18 +35,17 @@ import re
 import shutil
 import socket
 
+from configparser import Error
+from configparser import MissingSectionHeaderError
+
 try:
     # For Python 3.0 and later
-    from configparser import Error
-    from configparser import MissingSectionHeaderError
     from urllib.request import urlopen
     from urllib.request import Request
     from urllib.error import HTTPError
     from urllib.error import URLError
 except ImportError:
     # Fall back to Python 2's naming
-    from ConfigParser import Error
-    from ConfigParser import MissingSectionHeaderError
     from urllib2 import urlopen
     from urllib2 import Request
     from urllib2 import HTTPError
@@ -115,7 +114,7 @@ def should_download_file(requested_types, video_type):
         do_download = True
 
     elif requested_types == 'single_trailer':
-        do_download = (video_type == 'trailer' or video_type == 'trailer 1')
+        do_download = (video_type in ('trailer', 'trailer 1'))
 
     elif requested_types == 'trailers':
         if (video_type.startswith('trailer') or
@@ -179,7 +178,8 @@ def download_trailer_file(url, destdir, filename):
         if ex.code == 416:
             logging.debug("*** File already downloaded, skipping")
             return
-        elif ex.code == 404:
+
+        if ex.code == 404:
             logging.error("*** Error downloading file: file not found")
             return
 
@@ -210,7 +210,7 @@ def download_trailers_from_page(page_url, dl_list_path, res, destdir, types):
     """Takes a page on the Apple Trailers website and downloads the trailer for the movie on
     the page. Example URL: http://trailers.apple.com/trailers/lions_gate/thehungergames/"""
 
-    logging.debug('Checking for files at ' + page_url)
+    logging.debug('Checking for files at %s', page_url)
     trailer_urls = get_trailer_file_urls(page_url, res, types)
     downloaded_files = get_downloaded_files(dl_list_path)
 
@@ -222,7 +222,7 @@ def download_trailers_from_page(page_url, dl_list_path, res, destdir, types):
             download_trailer_file(trailer_url['url'], destdir, trailer_file_name)
             record_downloaded_file(trailer_file_name, dl_list_path)
         else:
-            logging.debug('*** File already downloaded, skipping: ' + trailer_file_name)
+            logging.debug('*** File already downloaded, skipping: %s', trailer_file_name)
 
 
 def get_trailer_filename(film_title, video_type, res):
@@ -326,10 +326,7 @@ def get_settings():
 
     args = get_command_line_arguments()
 
-    config_path = "{}/settings.cfg".format(script_dir)
-    if 'config_path' in args:
-        config_path = args['config_path']
-
+    config_path = args.get('config_path', "{}/settings.cfg".format(script_dir))
     config = get_config_values(config_path, defaults)
 
     settings = config.copy()
@@ -472,7 +469,7 @@ def main():
     try:
         settings = get_settings()
     except MissingSectionHeaderError:
-        logging.error('Configuration file is missing a header section, ' +
+        logging.error('Configuration file is missing a header section, '
                       'try adding [DEFAULT] at the top of the file')
         return
     except (Error, ValueError) as ex:
