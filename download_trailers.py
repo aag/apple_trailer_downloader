@@ -115,7 +115,7 @@ def should_download_file(requested_types, video_type):
         do_download = True
 
     elif requested_types == 'single_trailer':
-        do_download = (video_type == 'trailer')
+        do_download = (video_type == 'trailer' or video_type == 'trailer 1')
 
     elif requested_types == 'trailers':
         if (video_type.startswith('trailer') or
