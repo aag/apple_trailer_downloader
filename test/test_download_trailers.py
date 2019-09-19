@@ -46,17 +46,17 @@ DOWNLOAD_LIST_FIXTURE_PATH = os.path.join(TEST_DIR, 'fixtures', 'download_list.t
 
 SOME_CONFIG_DEFAULTS = {
     'download_dir': '/tmp/download',
+    'output_level': 'debug',
     'resolution': '720',
     'video_types': 'single_trailer',
-    'output_level': 'debug',
 }
 
 SOME_VALID_SETTINGS = {
-    'resolution': '1080',
     'download_dir': '/',
-    'video_types': 'trailers',
-    'output_level': 'error',
     'list_file': '/list.txt',
+    'output_level': 'error',
+    'resolution': '1080',
+    'video_types': 'trailers',
 }
 
 REQUIRED_SETTINGS = ['resolution', 'download_dir', 'video_types', 'output_level', 'list_file']
@@ -186,13 +186,18 @@ def test_get_trailer_filename_repeating_spaces():
 
 def test_get_config_values_no_config_file():
     missing_file_path = '/not/a/path/on/any/real/system/settings.cfg'
-    assert trailers.get_config_values(missing_file_path, SOME_CONFIG_DEFAULTS) == SOME_CONFIG_DEFAULTS
+    settings = copy.deepcopy(SOME_CONFIG_DEFAULTS)
+    settings['download_all_urls'] = []
+
+    assert trailers.get_config_values(missing_file_path, SOME_CONFIG_DEFAULTS) == settings
 
 
 def test_get_config_values_empty_config_file():
     empty_config_file = os.path.join(TEST_DIR, 'fixtures', 'settings', 'empty_settings.cfg')
+    settings = copy.deepcopy(SOME_CONFIG_DEFAULTS)
+    settings['download_all_urls'] = []
 
-    assert trailers.get_config_values(empty_config_file, SOME_CONFIG_DEFAULTS) == SOME_CONFIG_DEFAULTS
+    assert trailers.get_config_values(empty_config_file, SOME_CONFIG_DEFAULTS) == settings
 
 
 def test_get_config_values_normal_config_file():
@@ -203,6 +208,10 @@ def test_get_config_values_normal_config_file():
         'resolution': '1080',
         'video_types': 'all',
         'output_level': 'error',
+        'download_all_urls': [
+            '/trailers/one',
+            '/trailers/two',
+        ]
     }
 
     assert trailers.get_config_values(empty_config_file, SOME_CONFIG_DEFAULTS) == config_values
@@ -328,4 +337,16 @@ def test_validate_settings_setting_missing():
             settings = copy.deepcopy(SOME_VALID_SETTINGS)
             settings.pop(setting)
             trailers.validate_settings(settings)
+
+
+def test_clean_url_with_traling_slash():
+    orig_url = "https://trailers.apple.com/path/film/"
+
+    assert trailers.get_url_path(orig_url) == "/path/film"
+
+
+def test_clean_url_without_trailing_slash():
+    orig_url = "https://trailers.apple.com/path/film"
+
+    assert trailers.get_url_path(orig_url) == "/path/film"
 

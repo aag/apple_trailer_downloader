@@ -36,14 +36,6 @@ import shutil
 import socket
 
 try:
-    # For Python 2
-    from ConfigParser import Error
-    from ConfigParser import MissingSectionHeaderError
-    from urllib2 import urlopen
-    from urllib2 import Request
-    from urllib2 import HTTPError
-    from urllib2 import URLError
-except ImportError:
     # For Python 3.0 and later
     from configparser import Error
     from configparser import MissingSectionHeaderError
@@ -51,9 +43,19 @@ except ImportError:
     from urllib.request import Request
     from urllib.error import HTTPError
     from urllib.error import URLError
+    from urllib.parse import urlparse
+except ImportError:
+    # Fall back to Python 2's naming
+    from ConfigParser import Error
+    from ConfigParser import MissingSectionHeaderError
+    from urllib2 import urlopen
+    from urllib2 import Request
+    from urllib2 import HTTPError
+    from urllib2 import URLError
+    from urlparse import urlparse
 
 
-def get_trailer_file_urls(page_url, res, types):
+def get_trailer_file_urls(page_url, res, types, download_all_urls):
     """Get all trailer file URLs from the given movie page in the given
     resolution and having the given trailer types.
     """
@@ -70,7 +72,9 @@ def get_trailer_file_urls(page_url, res, types):
             file_info = clip['versions']['enus']['sizes'][apple_size]
             file_url = convert_src_url_to_file_url(file_info['src'], res)
 
-            if should_download_file(types, video_type):
+            if (get_url_path(page_url) in download_all_urls or
+                    should_download_file(types, video_type)):
+
                 url_info = {
                     'res': res,
                     'title': title,
@@ -210,14 +214,16 @@ def download_trailer_file(url, destdir, filename):
         return
 
 
-def download_trailers_from_page(page_url, dl_list_path, res, destdir, types):
+def download_trailers_from_page(page_url, settings):
     """Takes a page on the Apple Trailers website and downloads the trailer
     for the movie on the page. Example URL:
     http://trailers.apple.com/trailers/lions_gate/thehungergames/"""
 
     logging.debug('Checking for files at %s', page_url)
-    trailer_urls = get_trailer_file_urls(page_url, res, types)
-    downloaded_files = get_downloaded_files(dl_list_path)
+    trailer_urls = get_trailer_file_urls(page_url, settings['resolution'],
+                                         settings['video_types'],
+                                         settings['download_all_urls'])
+    downloaded_files = get_downloaded_files(settings['list_file'])
 
     for trailer_url in trailer_urls:
         trailer_file_name = get_trailer_filename(trailer_url['title'],
@@ -226,9 +232,9 @@ def download_trailers_from_page(page_url, dl_list_path, res, destdir, types):
         if trailer_file_name not in downloaded_files:
             logging.info('Downloading %s: %s', trailer_url['type'],
                          trailer_file_name)
-            download_trailer_file(trailer_url['url'], destdir,
+            download_trailer_file(trailer_url['url'], settings['download_dir'],
                                   trailer_file_name)
-            record_downloaded_file(trailer_file_name, dl_list_path)
+            record_downloaded_file(trailer_file_name, settings['list_file'])
         else:
             logging.debug('*** File already downloaded, skipping: %s',
                           trailer_file_name)
@@ -247,6 +253,17 @@ def get_trailer_filename(film_title, video_type, res):
     trailer_file_name = u'{}.{}.{}p.mov'.format(trailer_file_name.strip(),
                                                 video_type, res)
     return trailer_file_name
+
+
+def get_url_path(url):
+    """Take a full URL and reduce it to just the path, with starting and ending
+    whitespace as well as the trailing slash removed, if they exist."""
+    url = url.strip()
+    path = urlparse(url).path
+    if path and path[-1] == "/":
+        path = path[:-1]
+
+    return path
 
 
 def validate_settings(settings):
@@ -317,6 +334,12 @@ def get_config_values(config_path, defaults):
             config_values = config.defaults()
             break
 
+    if config_values.get('download_all_urls', ''):
+        config_values['download_all_urls'] = (
+            [get_url_path(s) for s in config_values['download_all_urls'].split(',')])
+    else:
+        config_values['download_all_urls'] = []
+
     if not config_file_found:
         logging.info('Config file not found. Using default values.')
 
@@ -334,9 +357,9 @@ def get_settings():
     script_dir = os.path.abspath(os.path.dirname(__file__))
     defaults = {
         'download_dir': script_dir,
+        'output_level': 'debug',
         'resolution': '720',
         'video_types': 'single_trailer',
-        'output_level': 'debug',
     }
 
     args = get_command_line_arguments()
@@ -507,13 +530,7 @@ def main():
     # Do the download
     if 'page' in settings:
         # The trailer page URL was passed in on the command line
-        download_trailers_from_page(
-            settings['page'],
-            settings['list_file'],
-            settings['resolution'],
-            settings['download_dir'],
-            settings['video_types']
-        )
+        download_trailers_from_page(settings['page'], settings)
 
     else:
         just_added_url = ('http://trailers.apple.com/trailers/'
@@ -522,13 +539,7 @@ def main():
 
         for trailer in newest_trailers:
             url = 'http://trailers.apple.com' + trailer['location']
-            download_trailers_from_page(
-                url,
-                settings['list_file'],
-                settings['resolution'],
-                settings['download_dir'],
-                settings['video_types']
-            )
+            download_trailers_from_page(url, settings)
 
 
 if __name__ == '__main__':
