@@ -336,7 +336,8 @@ def get_config_values(config_path, defaults):
 
     if config_values.get('download_all_urls', ''):
         config_values['download_all_urls'] = (
-            [get_url_path(s) for s in config_values['download_all_urls'].split(',')])
+            [get_url_path(s) for
+             s in config_values['download_all_urls'].split(',')])
     else:
         config_values['download_all_urls'] = []
 
