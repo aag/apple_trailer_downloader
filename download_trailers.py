@@ -27,6 +27,7 @@ Some imports are declared inside of functions, so that this script can be
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import argparse
 import io
 import json
 import logging
@@ -37,6 +38,7 @@ import socket
 
 try:
     # For Python 3.0 and later
+    from configparser import ConfigParser
     from configparser import Error
     from configparser import MissingSectionHeaderError
     from urllib.request import urlopen
@@ -48,6 +50,7 @@ except ImportError:
     # Fall back to Python 2's naming
     from ConfigParser import Error
     from ConfigParser import MissingSectionHeaderError
+    from ConfigParser import SafeConfigParser as ConfigParser
     from urllib2 import urlopen
     from urllib2 import Request
     from urllib2 import HTTPError
@@ -314,13 +317,6 @@ def get_config_values(config_path, defaults):
     file exists, just return the defaults.
     """
 
-    try:
-        # For Python 2
-        from ConfigParser import SafeConfigParser as ConfigParser
-    except ImportError:
-        # For Python 3.0 and later
-        from configparser import ConfigParser
-
     config = ConfigParser(defaults)
     config_values = config.defaults()
 
@@ -394,7 +390,6 @@ def get_command_line_arguments():
     """Return a dictionary containing all of the command-line arguments
     specified when the script was run.
     """
-    import argparse
 
     parser = argparse.ArgumentParser(
         description='Download movie trailers from the Apple website. With no '
