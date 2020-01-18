@@ -64,6 +64,10 @@ def get_trailer_file_urls(page_url, res, types, download_all_urls):
     """
     urls = []
 
+    # Strip trailing slash from URL if it exists
+    if page_url and page_url[-1] == "/":
+        page_url = page_url[:-1]
+
     film_data = load_json_from_url(page_url + '/data/page.json')
     if not film_data:
         return urls
@@ -500,7 +504,7 @@ def load_json_from_url(url):
         str_response = response.read().decode('utf-8')
         return json.loads(str_response)
     except (URLError, ValueError):
-        logging.error("*** No trailer information found at URL")
+        logging.error("*** Error: could not load data from {}".format(url))
         return {}
 
 
