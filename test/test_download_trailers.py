@@ -167,6 +167,21 @@ def test_get_download_types_trailers():
     assert download_types == expected_types
 
 
+def test_file_already_downloaded_downloaded():
+    download_list = [u'Film.Trailer 2.1080p.mov', u'☃.Clip.480p.mov']
+    assert trailers.file_already_downloaded(download_list, 'Film', 'Trailer 2', '1080', 'all')
+    
+
+def test_file_already_downloaded_single_trailer():
+    download_list = [u'Film.Trailer 2.1080p.mov', u'☃.Clip.480p.mov']
+    assert trailers.file_already_downloaded(download_list, 'Film', 'Trailer 1', '1080', 'single_trailer')
+
+
+def test_file_already_downloaded_single_trailer():
+    download_list = [u'Film.Clip 2.1080p.mov', u'☃.Clip.480p.mov']
+    assert not trailers.file_already_downloaded(download_list, 'Film', 'Trailer 1', '1080', 'single_trailer')
+
+
 def test_get_downloaded_files_missing_file():
     assert trailers.get_downloaded_files('/not/a/real/path/to/file.txt') == []
 

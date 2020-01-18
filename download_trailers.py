@@ -184,6 +184,21 @@ def record_downloaded_file(filename, dl_list_path):
     write_downloaded_files(file_list, dl_list_path)
 
 
+def file_already_downloaded(file_list, movie_title, video_type, res,
+                            requested_types):
+    """Returns true if the file_list contains a file that matches the file
+    properties."""
+
+    if requested_types.lower() == 'single_trailer':
+        trailer_prefix = '{}.trailer'.format(movie_title.lower())
+        movie_trailers = [f for f in file_list
+                          if f.lower().startswith(trailer_prefix)]
+        return bool(movie_trailers)
+
+    trailer_file_name = get_trailer_filename(movie_title, video_type, res)
+    return trailer_file_name in file_list
+
+
 def download_trailer_file(url, destdir, filename):
     """Accepts a URL to a trailer video file and downloads it
     You have to spoof the user agent or the site will deny the request
@@ -196,7 +211,7 @@ def download_trailer_file(url, destdir, filename):
         existing_file_size = os.path.getsize(file_path)
 
     data = None
-    headers = {'User-Agent': 'Quick_time/7.6.2'}
+    headers = {}
 
     resume_download = False
     if file_exists and (existing_file_size > 0):
@@ -256,7 +271,13 @@ def download_trailers_from_page(page_url, settings):
         trailer_file_name = get_trailer_filename(trailer_url['title'],
                                                  trailer_url['type'],
                                                  trailer_url['res'])
-        if trailer_file_name not in downloaded_files:
+        already_downloaded = (
+            file_already_downloaded(downloaded_files, trailer_url['title'],
+                                    trailer_url['type'], trailer_url['res'],
+                                    settings['video_types'])
+        )
+
+        if not already_downloaded:
             logging.info('Downloading %s: %s', trailer_url['type'],
                          trailer_file_name)
             download_trailer_file(trailer_url['url'], settings['download_dir'],
