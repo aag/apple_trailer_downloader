@@ -9,7 +9,7 @@ they aren't re-downloaded.
 
 Requirements
 ------------
-Running this script requires Python 2.7 or Python 3.3+. If you don't currently have
+Running this script requires Python 2.7 or Python 3.5+. If you don't currently have
 Python installed on your computer, see the setup documentation for
 [Python 2](https://docs.python.org/2/using/index.html) or
 [Python 3](https://docs.python.org/3/using/index.html).
