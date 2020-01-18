@@ -350,3 +350,15 @@ def test_clean_url_without_trailing_slash():
 
     assert trailers.get_url_path(orig_url) == "/path/film"
 
+# def test_get_trailer_file_urls_invalid_domain():
+#     urls = trailers.get_trailer_file_urls("http://www.Norkm3cHedUNPmL7vMALFaYUp4o7jcLF9KTmwTAMPzNNoyxp.com/test", "480", ["all"], [])
+#     assert not urls
+
+# def test_get_trailer_file_urls_invalid_response():
+#     urls = trailers.get_trailer_file_urls("http://www.example.com/test", "480", ["all"], [])
+#     assert not urls
+
+# def test_get_trailer_file_urls_404():
+#     urls = trailers.get_trailer_file_urls("https://definingterms.com/random_url_XHNcTCAwihjCRoxV7igg9gwk", "480", ["all"], [])
+#     assert not urls
+

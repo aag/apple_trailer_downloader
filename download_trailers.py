@@ -62,6 +62,9 @@ def get_trailer_file_urls(page_url, res, types, download_all_urls):
     urls = []
 
     film_data = load_json_from_url(page_url + '/data/page.json')
+    if not film_data:
+        return urls
+
     title = film_data['page']['movie_title']
     apple_size = map_res_to_apple_size(res)
 
@@ -495,10 +498,14 @@ def configure_logging(output_level):
 
 def load_json_from_url(url):
     """Takes a URL and returns a Python dict representing the JSON of the
-    URL's contents."""
-    response = urlopen(url)
-    str_response = response.read().decode('utf-8')
-    return json.loads(str_response)
+    URL's contents. If there is an error fetching the URL or invalid JSON is
+    returned, an empty dict is returned."""
+    try:
+        response = urlopen(url)
+        str_response = response.read().decode('utf-8')
+        return json.loads(str_response)
+    except (URLError, ValueError):
+        return {}
 
 
 def main():
