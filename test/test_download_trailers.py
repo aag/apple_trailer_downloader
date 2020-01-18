@@ -84,11 +84,15 @@ def test_should_download_file_all():
     assert trailers.should_download_file('all', '')
     assert trailers.should_download_file('ALL', u'The Making of Safe and Sound')
     assert trailers.should_download_file('all', u'Trailer')
+    assert trailers.should_download_file('all', u'Trailer ')
 
 
 def test_should_download_file_single_trailer_trailer():
     assert trailers.should_download_file('single_trailer', u'Trailer')
+    assert trailers.should_download_file('single_trailer', u'Trailer ')
     assert trailers.should_download_file('single_trailer', u'Trailer 1')
+    assert trailers.should_download_file('single_trailer', u' Trailer 1 ')
+    assert trailers.should_download_file('single_trailer', u' Trailer    1 ')
 
 
 def test_should_download_file_single_trailer_non_trailer():
@@ -100,7 +104,8 @@ def test_should_download_file_single_trailer_non_trailer():
 
 def test_should_download_file_trailers_trailers():
     assert trailers.should_download_file('trailers', u'Trailer')
-    assert trailers.should_download_file('Trailers', u'Trailer 2')
+    assert trailers.should_download_file('trailers', u'Trailer ')
+    assert trailers.should_download_file('Trailers', u'Trailer 2 ')
     assert trailers.should_download_file('TRAILERS', u'Teaser')
     assert trailers.should_download_file('trailers', u'Teaser 2')
     assert trailers.should_download_file('trailers', u'First Look')

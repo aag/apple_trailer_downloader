@@ -76,7 +76,8 @@ def get_trailer_file_urls(page_url, res, types, download_all_urls):
     apple_size = map_res_to_apple_size(res)
 
     for clip in film_data['clips']:
-        video_type = clip['title']
+        # Remove beginning, end, and duplicate whitespace
+        video_type = ' '.join(clip['title'].split())
 
         if apple_size in clip['versions']['enus']['sizes']:
             file_info = clip['versions']['enus']['sizes'][apple_size]
@@ -123,7 +124,7 @@ def should_download_file(requested_types, video_type):
     """
     do_download = False
     requested_types = requested_types.lower()
-    video_type = video_type.lower()
+    video_type = ' '.join(video_type.split()).lower()
 
     if requested_types == 'all':
         do_download = True
