@@ -500,6 +500,7 @@ def load_json_from_url(url):
         str_response = response.read().decode('utf-8')
         return json.loads(str_response)
     except (URLError, ValueError):
+        logging.error("*** No trailer information found at URL")
         return {}
 
 
