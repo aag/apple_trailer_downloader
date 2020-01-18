@@ -75,26 +75,32 @@ def get_trailer_file_urls(page_url, res, types, download_all_urls):
     title = film_data['page']['movie_title']
     apple_size = map_res_to_apple_size(res)
 
+    # Remove beginning, end, and duplicate whitespace from titles
+    all_video_types = list(map(lambda c: ' '.join(c['title'].split()),
+                               film_data['clips']))
+    download_types = get_download_types(types, all_video_types)
+
+    # The user wants all videos from this movie regardless of the video_types
+    # setting
+    download_all = get_url_path(page_url) in download_all_urls
+
     for clip in film_data['clips']:
         # Remove beginning, end, and duplicate whitespace
         video_type = ' '.join(clip['title'].split())
 
-        if apple_size in clip['versions']['enus']['sizes']:
-            file_info = clip['versions']['enus']['sizes'][apple_size]
-            file_url = convert_src_url_to_file_url(file_info['src'], res)
-
-            if (get_url_path(page_url) in download_all_urls or
-                    should_download_file(types, video_type)):
-
+        if video_type in download_types or download_all:
+            if apple_size in clip['versions']['enus']['sizes']:
+                file_info = clip['versions']['enus']['sizes'][apple_size]
                 url_info = {
                     'res': res,
                     'title': title,
                     'type': video_type,
-                    'url': file_url,
+                    'url': convert_src_url_to_file_url(file_info['src'], res),
                 }
+
                 urls.append(url_info)
-        elif should_download_file(types, video_type):
-            logging.error('*** No %sp file found for %s', res, video_type)
+            else:
+                logging.error('*** No %sp file found for %s', res, video_type)
 
     return urls
 
@@ -118,27 +124,40 @@ def convert_src_url_to_file_url(src_url, res):
     return src_url.replace(src_ending, file_ending)
 
 
-def should_download_file(requested_types, video_type):
-    """Given the requested video types and the specified video type of a
-    particular file, return true if the video file should be downloaded.
-    """
-    do_download = False
+def get_download_types(requested_types, all_video_types):
+    """Given the requested video types and all video types for this movie,
+    return the list of types that should be downloaded"""
+    download_types = []
     requested_types = requested_types.lower()
-    video_type = ' '.join(video_type.split()).lower()
+
+    # Normalize whitespace
+    video_types = list(map(lambda t: ' '.join(t.split()), all_video_types))
+
+    # Remove types that were empty or only whitespace
+    video_types = list(filter(lambda t: t, video_types))
+
+    # Remove duplicates
+    video_types = list(set(video_types))
+
+    # Sort for consistent results and finding the first trailer
+    video_types = sorted(video_types)
 
     if requested_types == 'all':
-        do_download = True
+        download_types = video_types
 
     elif requested_types == 'single_trailer':
-        do_download = (video_type in ('trailer', 'trailer 1'))
+        video_types = list(filter(lambda t: t.lower().startswith('trailer'),
+                                  video_types))
+        download_types = video_types[0:1]
 
     elif requested_types == 'trailers':
-        if (video_type.startswith('trailer') or
-                video_type.startswith('teaser') or
-                video_type == 'first look'):
-            do_download = True
+        download_types = list(filter(lambda t:
+                                     t.lower().startswith('trailer')
+                                     or t.lower().startswith('teaser')
+                                     or t.lower() == 'first look',
+                                     video_types))
 
-    return do_download
+    return download_types
 
 
 def get_downloaded_files(dl_list_path):

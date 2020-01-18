@@ -80,41 +80,91 @@ def test_convert_src_url_to_file_url():
     assert trailers.convert_src_url_to_file_url(src_url, 720) == file_url
 
 
-def test_should_download_file_all():
-    assert trailers.should_download_file('all', '')
-    assert trailers.should_download_file('ALL', u'The Making of Safe and Sound')
-    assert trailers.should_download_file('all', u'Trailer')
-    assert trailers.should_download_file('all', u'Trailer ')
+def test_get_download_types_all():
+    video_types = ['', u'The Making of Safe and Sound', u'Trailer',
+            u'Trailer ']
+    download_types = trailers.get_download_types(
+        'all',
+        video_types,
+    )
+
+    expected_types = [u'The Making of Safe and Sound', u'Trailer']
+    
+    assert download_types == expected_types
 
 
-def test_should_download_file_single_trailer_trailer():
-    assert trailers.should_download_file('single_trailer', u'Trailer')
-    assert trailers.should_download_file('single_trailer', u'Trailer ')
-    assert trailers.should_download_file('single_trailer', u'Trailer 1')
-    assert trailers.should_download_file('single_trailer', u' Trailer 1 ')
-    assert trailers.should_download_file('single_trailer', u' Trailer    1 ')
+def test_get_download_types_all_bad_formatting():
+    video_types = ['  ', u'The Making of Safe and Sound', u'  Trailer  ',
+            u'Trailer ', u'  Trailer 3  ', u'Trailer       2']
+    download_types = trailers.get_download_types(
+        'all',
+        video_types,
+    )
+
+    expected_types = [u'The Making of Safe and Sound', u'Trailer',
+            u'Trailer 2', u'Trailer 3']
+    
+    assert download_types == expected_types
 
 
-def test_should_download_file_single_trailer_non_trailer():
-    assert not trailers.should_download_file('single_trailer', u'')
-    assert not trailers.should_download_file('SINGLE_TRAILER', u'Clip')
-    assert not trailers.should_download_file('Single_Trailer', u'Sneak Peek')
-    assert not trailers.should_download_file('single_trailer', u'Trailer 2')
+def test_get_download_types_single_trailer_one_trailer():
+    type_list = [u'Trailer']
+    download_types = trailers.get_download_types(
+        'single_trailer',
+        type_list,
+    )
+    assert download_types == type_list
 
 
-def test_should_download_file_trailers_trailers():
-    assert trailers.should_download_file('trailers', u'Trailer')
-    assert trailers.should_download_file('trailers', u'Trailer ')
-    assert trailers.should_download_file('Trailers', u'Trailer 2 ')
-    assert trailers.should_download_file('TRAILERS', u'Teaser')
-    assert trailers.should_download_file('trailers', u'Teaser 2')
-    assert trailers.should_download_file('trailers', u'First Look')
+def test_get_download_types_single_trailer_two_trailers():
+    type_list = [u'Trailer', u'Trailer 2']
+    download_types = trailers.get_download_types(
+        'single_trailer',
+        type_list,
+    )
+    expected_types = [u'Trailer']
+    assert download_types == expected_types
 
 
-def test_should_download_file_trailers_non_trailers():
-    assert not trailers.should_download_file('trailers', u'Clip')
-    assert not trailers.should_download_file('TRAILERS', u'Sneak Peek')
-    assert not trailers.should_download_file('Trailers', u'The Making of Safe and Sound')
+def test_get_download_types_single_trailer_two_trailers():
+    type_list = [u'Trailer 2', u'Trailer']
+    download_types = trailers.get_download_types(
+        'single_trailer',
+        type_list,
+    )
+    expected_types = [u'Trailer']
+    assert download_types == expected_types
+
+
+def test_get_download_types_single_trailer_only_trailer_2():
+    type_list = [u'Trailer 2']
+    download_types = trailers.get_download_types(
+        'single_trailer',
+        type_list,
+    )
+    expected_types = [u'Trailer 2']
+    assert download_types == expected_types
+
+
+def test_get_download_types_single_trailer_no_trailers():
+    type_list = [u'', u'Clip', u'Sneak Peek']
+    download_types = trailers.get_download_types(
+        'SINGLE_TRAILER',
+        type_list,
+    )
+    expected_types = []
+    assert download_types == expected_types
+
+
+def test_get_download_types_trailers():
+    type_list = [u'Trailer 2', u'Clip', u'Teaser', u'Sneak Peek', u'Trailer',
+            u'Teaser 2', u'First Look', u'The Making of Safe and Sound']
+    download_types = trailers.get_download_types(
+        'tRaiLers',
+        type_list,
+    )
+    expected_types = [u'First Look', u'Teaser', u'Teaser 2', u'Trailer', u'Trailer 2']
+    assert download_types == expected_types
 
 
 def test_get_downloaded_files_missing_file():
