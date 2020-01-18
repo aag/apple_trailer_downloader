@@ -76,8 +76,8 @@ def get_trailer_file_urls(page_url, res, types, download_all_urls):
     apple_size = map_res_to_apple_size(res)
 
     # Remove beginning, end, and duplicate whitespace from titles
-    all_video_types = list(map(lambda c: ' '.join(c['title'].split()),
-                               film_data['clips']))
+    all_video_types = [' '.join(c['title'].split()) for c
+                       in film_data['clips']]
     download_types = get_download_types(types, all_video_types)
 
     # The user wants all videos from this movie regardless of the video_types
@@ -91,14 +91,12 @@ def get_trailer_file_urls(page_url, res, types, download_all_urls):
         if video_type in download_types or download_all:
             if apple_size in clip['versions']['enus']['sizes']:
                 file_info = clip['versions']['enus']['sizes'][apple_size]
-                url_info = {
+                urls.append({
                     'res': res,
                     'title': title,
                     'type': video_type,
                     'url': convert_src_url_to_file_url(file_info['src'], res),
-                }
-
-                urls.append(url_info)
+                })
             else:
                 logging.error('*** No %sp file found for %s', res, video_type)
 
@@ -131,10 +129,10 @@ def get_download_types(requested_types, all_video_types):
     requested_types = requested_types.lower()
 
     # Normalize whitespace
-    video_types = list(map(lambda t: ' '.join(t.split()), all_video_types))
+    video_types = [' '.join(t.split()) for t in all_video_types]
 
     # Remove types that were empty or only whitespace
-    video_types = list(filter(lambda t: t, video_types))
+    video_types = [t for t in video_types if t]
 
     # Remove duplicates
     video_types = list(set(video_types))
@@ -146,16 +144,15 @@ def get_download_types(requested_types, all_video_types):
         download_types = video_types
 
     elif requested_types == 'single_trailer':
-        video_types = list(filter(lambda t: t.lower().startswith('trailer'),
-                                  video_types))
+        video_types = [t for t in video_types
+                       if t.lower().startswith('trailer')]
         download_types = video_types[0:1]
 
     elif requested_types == 'trailers':
-        download_types = list(filter(lambda t:
-                                     t.lower().startswith('trailer')
-                                     or t.lower().startswith('teaser')
-                                     or t.lower() == 'first look',
-                                     video_types))
+        download_types = [t for t in video_types
+                          if t.lower().startswith('trailer')
+                          or t.lower().startswith('teaser')
+                          or t.lower() == 'first look']
 
     return download_types
 
