@@ -504,7 +504,7 @@ def load_json_from_url(url):
         str_response = response.read().decode('utf-8')
         return json.loads(str_response)
     except (URLError, ValueError):
-        logging.error("*** Error: could not load data from {}".format(url))
+        logging.error("*** Error: could not load data from %s", url)
         return {}
 
 
