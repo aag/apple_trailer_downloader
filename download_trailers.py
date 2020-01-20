@@ -190,7 +190,8 @@ def file_already_downloaded(file_list, movie_title, video_type, res,
     properties."""
 
     if requested_types.lower() == 'single_trailer':
-        trailer_prefix = '{}.trailer'.format(movie_title.lower())
+        clean_title = clean_movie_title(movie_title)
+        trailer_prefix = '{}.trailer'.format(clean_title.lower())
         movie_trailers = [f for f in file_list
                           if f.lower().startswith(trailer_prefix)]
         return bool(movie_trailers)
@@ -288,18 +289,24 @@ def download_trailers_from_page(page_url, settings):
                           trailer_file_name)
 
 
-def get_trailer_filename(film_title, video_type, res):
-    """Take video info and convert it to a safe, normalized filename.
-
+def clean_movie_title(title):
+    """Take a movie title and convert it to a safe, normalized title for use
+    in filenames.
     In addition to stripping leading and trailing whitespace from the title
     and converting to unicode, this function also removes characters that
     should not be used in filenames on various operating systems."""
-    trailer_file_name = u''.join(s for s in film_title
+    clean_title = u''.join(s for s in title
                                  if s not in r'\/:*?<>|#%&{}$!\'"@+`=')
     # Remove repeating spaces
-    trailer_file_name = re.sub(r'\s\s+', ' ', trailer_file_name)
-    trailer_file_name = u'{}.{}.{}p.mov'.format(trailer_file_name.strip(),
-                                                video_type, res)
+    clean_title = re.sub(r'\s\s+', ' ', clean_title).strip()
+
+    return clean_title
+
+
+def get_trailer_filename(film_title, video_type, res):
+    """Take video info and convert it to a cononical filename."""
+    clean_title = clean_movie_title(film_title)
+    trailer_file_name = u'{}.{}.{}p.mov'.format(clean_title, video_type, res)
     return trailer_file_name
 
 

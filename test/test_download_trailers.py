@@ -177,9 +177,14 @@ def test_file_already_downloaded_single_trailer():
     assert trailers.file_already_downloaded(download_list, 'Film', 'Trailer 1', '1080', 'single_trailer')
 
 
-def test_file_already_downloaded_single_trailer():
+def test_file_already_downloaded_single_trailer_clip():
     download_list = [u'Film.Clip 2.1080p.mov', u'☃.Clip.480p.mov']
     assert not trailers.file_already_downloaded(download_list, 'Film', 'Trailer 1', '1080', 'single_trailer')
+
+
+def test_file_already_downloaded_filename_munged():
+    download_list = [u'Top Gun Maverick.Trailer.1080p.mov', u'☃.Clip.480p.mov']
+    assert trailers.file_already_downloaded(download_list, 'Top Gun: Maverick+++', 'Trailer 1', '1080', 'single_trailer')
 
 
 def test_get_downloaded_files_missing_file():
@@ -232,6 +237,21 @@ def test_record_downloaded_file_existing_file():
 
     assert trailers.get_downloaded_files(tmp_file_path) == full_downloaded_list
     os.remove(tmp_file_path)
+
+
+def test_clean_movie_title_unicode():
+    clean_title = u'★ Mötley Crüe ★'
+    assert trailers.clean_movie_title(u'★ Mötley Crüe ★') == clean_title
+
+
+def test_clean_movie_title_blacklist_chars():
+    clean_title = u'Sophies Choice 1'
+    assert trailers.clean_movie_title(u'Sophie\'s Choice: 1 + ? = ?') == clean_title
+
+
+def test_clean_movie_title_repeating_spaces():
+    clean_title = u'Film Movie'
+    assert trailers.clean_movie_title(u'  Film    :   + ?/= ?   Movie') == clean_title
 
 
 def test_get_trailer_filename_simple():
