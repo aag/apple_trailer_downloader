@@ -296,7 +296,7 @@ def clean_movie_title(title):
     and converting to unicode, this function also removes characters that
     should not be used in filenames on various operating systems."""
     clean_title = u''.join(s for s in title
-                                 if s not in r'\/:*?<>|#%&{}$!\'"@+`=')
+                           if s not in r'\/:*?<>|#%&{}$!\'"@+`=')
     # Remove repeating spaces
     clean_title = re.sub(r'\s\s+', ' ', clean_title).strip()
 
