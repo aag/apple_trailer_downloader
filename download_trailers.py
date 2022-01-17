@@ -27,10 +27,6 @@ Some imports are declared inside of functions, so that this script can be
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-# We still support Python 2, so we can't use f-strings, even though pylint
-# in recent versions of Python 3 wants us to.
-# pylint: disable=consider-using-f-string
-
 import argparse
 import io
 import json
