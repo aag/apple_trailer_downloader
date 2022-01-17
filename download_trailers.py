@@ -191,7 +191,7 @@ def file_already_downloaded(file_list, movie_title, video_type, res,
 
     if requested_types.lower() == 'single_trailer':
         clean_title = clean_movie_title(movie_title)
-        trailer_prefix = '{}.trailer'.format(clean_title.lower())
+        trailer_prefix = u'{}.trailer'.format(clean_title.lower())
         movie_trailers = [f for f in file_list
                           if f.lower().startswith(trailer_prefix)]
         return bool(movie_trailers)
@@ -295,11 +295,11 @@ def clean_movie_title(title):
     In addition to stripping leading and trailing whitespace from the title
     and converting to unicode, this function also removes characters that
     should not be used in filenames on various operating systems."""
-    clean_title = u''.join(s for s in title
-                           if s not in r'\/:*?<>|#%&{}$!\'"@+`=')
     # Remove repeating spaces
-    clean_title = re.sub(r'\s\s+', ' ', clean_title).strip()
+    clean_title = re.sub(r'\s\s+', ' ', title).strip()
 
+    clean_title = u''.join(s for s in clean_title
+                           if s not in r'\/:*?<>|#%&{}$!\'"@+`=')
     return clean_title
 
 
