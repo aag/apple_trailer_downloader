@@ -27,6 +27,10 @@ Some imports are declared inside of functions, so that this script can be
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+# We still support Python 2, so we can't use f-strings, even though pylint
+# in recent versions of Python 3 wants us to.
+# pylint: disable=consider-using-f-string
+
 import argparse
 import io
 import json
@@ -161,19 +165,17 @@ def get_downloaded_files(dl_list_path):
     """Get the list of downloaded files from the text file"""
     file_list = []
     if os.path.exists(dl_list_path):
-        utf8_file = io.open(dl_list_path, mode='r', encoding='utf-8')
-        for line in utf8_file:
-            file_list.append(line.strip())
-        utf8_file.close()
+        with io.open(dl_list_path, mode='r', encoding='utf-8') as utf8_file:
+            for line in utf8_file:
+                file_list.append(line.strip())
     return file_list
 
 
 def write_downloaded_files(file_list, dl_list_path):
     """Write the list of downloaded files to the text file"""
     new_list = [filename + u'\n' for filename in file_list]
-    downloads_file = io.open(dl_list_path, mode='w', encoding='utf-8')
-    downloads_file.writelines(new_list)
-    downloads_file.close()
+    with io.open(dl_list_path, mode='w', encoding='utf-8') as downloads_file:
+        downloads_file.writelines(new_list)
 
 
 def record_downloaded_file(filename, dl_list_path):
@@ -518,9 +520,9 @@ def get_command_line_arguments():
 
     # Remove all pairs that were not set on the command line.
     set_args = {}
-    for name in args:
-        if args[name] is not None:
-            set_args[name] = args[name]
+    for name, arg_val in args.items():
+        if arg_val is not None:
+            set_args[name] = arg_val
 
     return set_args
 
