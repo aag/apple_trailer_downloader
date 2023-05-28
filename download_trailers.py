@@ -45,7 +45,10 @@ try:
     from urllib.request import Request
     from urllib.error import HTTPError
     from urllib.error import URLError
+    from urllib.parse import ParseResult
+    from urllib.parse import quote
     from urllib.parse import urlparse
+    from urllib.parse import urlunparse
 except ImportError:
     # Fall back to Python 2's naming
     from ConfigParser import Error
@@ -55,7 +58,10 @@ except ImportError:
     from urllib2 import Request
     from urllib2 import HTTPError
     from urllib2 import URLError
+    from urllib import quote
+    from urlparse import ParseResult
     from urlparse import urlparse
+    from urlparse import urlunparse
 
 
 def get_trailer_file_urls(page_url, res, types, download_all_urls):
@@ -104,8 +110,8 @@ def get_trailer_file_urls(page_url, res, types, download_all_urls):
 
 
 def map_res_to_apple_size(res):
-    """Map a video resolution to the equivalent value used in the data JSON file.
-    """
+    """Map a video resolution to the equivalent value used in the data JSON
+    file."""
     res_mapping = {'480': u'sd', '720': u'hd720', '1080': u'hd1080'}
     if res not in res_mapping:
         res_string = ', '.join(res_mapping.keys())
@@ -198,6 +204,15 @@ def file_already_downloaded(file_list, movie_title, video_type, res,
     return trailer_file_name in file_list
 
 
+def escape_url_path(url):
+    """Performs URL encoding on the path part of the URL."""
+    url_parts = urlparse(url)
+    quoted_url = ParseResult(url_parts.scheme, url_parts.netloc,
+                             quote(url_parts.path), url_parts.params,
+                             url_parts.query, url_parts.fragment)
+    return urlunparse(quoted_url)
+
+
 def download_trailer_file(url, destdir, filename):
     """Accepts a URL to a trailer video file and downloads it
     You have to spoof the user agent or the site will deny the request
@@ -217,7 +232,7 @@ def download_trailer_file(url, destdir, filename):
         resume_download = True
         headers['Range'] = 'bytes={}-'.format(existing_file_size)
 
-    req = Request(url, data, headers)
+    req = Request(escape_url_path(url), data, headers)
 
     try:
         server_file_handle = urlopen(req)
@@ -524,8 +539,8 @@ def get_command_line_arguments():
 
 
 def configure_logging(output_level):
-    """Configure the logger to print messages with at least the level of the given
-    configuration value.
+    """Configure the logger to print messages with at least the level of the
+    given configuration value.
     """
     output_level = output_level.lower()
 
