@@ -51,6 +51,7 @@ try:
     from urllib.parse import urlunparse
 except ImportError:
     # Fall back to Python 2's naming
+    from urllib import quote
     from ConfigParser import Error
     from ConfigParser import MissingSectionHeaderError
     from ConfigParser import SafeConfigParser as ConfigParser
@@ -58,7 +59,6 @@ except ImportError:
     from urllib2 import Request
     from urllib2 import HTTPError
     from urllib2 import URLError
-    from urllib import quote
     from urlparse import ParseResult
     from urlparse import urlparse
     from urlparse import urlunparse
